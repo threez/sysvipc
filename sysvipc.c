@@ -375,11 +375,13 @@ rb_sem_set_value (obj, v_pos, v_value)
 {
   struct ipcid_ds *semid;
   int pos;
+  union semun arg;
 
   semid = get_ipcid_and_stat (obj);
   pos = NUM2INT (v_pos);
   Check_Valid_Semnum (pos, semid);
-  if (semctl (semid->id, pos, SETVAL, NUM2INT (v_value)) == -1)
+  arg.val = NUM2INT(v_value);
+  if (semctl (semid->id, pos, SETVAL, arg) == -1)
     rb_sys_fail ("semctl(2)");
   return obj;
 }
