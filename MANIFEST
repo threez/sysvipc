@@ -1,5 +1,4 @@
 MANIFEST
-Makefile
 extconf.rb
 sysvipc.c
 sysvipc.rd
