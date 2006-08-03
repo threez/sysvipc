@@ -259,7 +259,10 @@ static void
 sem_stat (semid)
      struct ipcid_ds *semid;
 {
-  if (semctl (semid->id, 0, IPC_STAT, (union semun)&semid->semstat) == -1)
+  union semun arg;
+
+  arg.buf = &semid->semstat;
+  if (semctl (semid->id, 0, IPC_STAT, arg) == -1)
     rb_sys_fail ("semctl(2)");
 }
 
@@ -315,19 +318,19 @@ rb_sem_to_a (obj)
      VALUE obj;
 {
   struct ipcid_ds *semid;
-  unsigned short int *array;
   int i, nsems;
   VALUE dst;
+  union semun arg;
 
   semid = get_ipcid_and_stat (obj);
   nsems = semid->semstat.sem_nsems;
-  array = xcalloc (nsems, sizeof (unsigned short int));
+  arg.array = xcalloc (nsems, sizeof (unsigned short int));
 
-  semctl (semid->id, 0, GETALL, array);
+  semctl (semid->id, 0, GETALL, arg);
 
   dst = rb_ary_new ();
   for (i = 0; i < nsems; i++)
-    rb_ary_push (dst, INT2FIX (array[i]));
+    rb_ary_push (dst, INT2FIX (arg.array[i]));
 
   return dst;
 }
@@ -337,7 +340,7 @@ rb_sem_set_all (obj, ary)
      VALUE obj, ary;
 {
   struct ipcid_ds *semid;
-  unsigned short int *array;
+  union semun arg;
   int i, nsems;
 
   semid = get_ipcid_and_stat (obj);
@@ -346,10 +349,10 @@ rb_sem_set_all (obj, ary)
   if (RARRAY(ary)->len != nsems)
     rb_raise (cError, "doesn't match with semnum");
 
-  array = xcalloc (nsems, sizeof (unsigned short int));
+  arg.array = xcalloc (nsems, sizeof (unsigned short int));
   for (i = 0; i < nsems; i++)
-    array[i] = NUM2INT (RARRAY(ary)->ptr[i]);
-  semctl (semid->id, 0, SETALL, array);
+    arg.array[i] = NUM2INT (RARRAY(ary)->ptr[i]);
+  semctl (semid->id, 0, SETALL, arg);
 
   return obj;
 }
