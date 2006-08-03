@@ -51,7 +51,7 @@ struct ipcid_ds {
   void *data;
 };
 
-struct msgbuf {
+struct my_msgbuf {
   long mtype;
   char mtext[1];
 };
@@ -173,7 +173,7 @@ rb_msg_send (argc, argv, obj)
 {
   VALUE v_type, v_buf, v_flags;
   int flags = 0, error;
-  struct msgbuf *msgp;
+  struct my_msgbuf *msgp;
   struct ipcid_ds *msgid;
   char *buf;
   size_t len;
@@ -219,7 +219,7 @@ rb_msg_recv (argc, argv, obj)
 {
   VALUE v_type, v_len, v_flags;
   int flags = 0;
-  struct msgbuf *msgp;
+  struct my_msgbuf *msgp;
   struct ipcid_ds *msgid;
   long type;
   size_t rlen, len;
