@@ -70,6 +70,15 @@ union semun {
 
 static VALUE cError;
 
+/*
+ * call-seq:
+ *   SystemVIPC.ftok(path, id) -> Fixnum
+ *
+ *   Convert a pathname and a project identifier to a System V IPC
+ *   key. +path+ is a string filename and +id+ is an integer.
+ *   See ftok(3).
+ */
+
 static VALUE
 rb_ftok (klass, v_path, v_id)
      VALUE klass, v_path, v_id;
@@ -105,6 +114,12 @@ get_ipcid_and_stat (obj)
   ipcid->stat (ipcid);
   return ipcid;
 }
+
+/* call-seq:
+ *   remove -> IPCObject
+ *
+ *   Removes the IPCObject.
+ */
 
 static VALUE
 rb_ipc_remove (obj)
@@ -144,6 +159,14 @@ msg_rmid (msgid)
   msgid->id = -1;
 }
 
+/*
+ * call-seq:
+ *   MessageQueue.new(key, msgflg) -> MessageQueue
+ *
+ *   Creates a new MessageQueue with key +key+ and flags +msgflg+. See
+ *   msgget(2).
+ */
+
 static VALUE
 rb_msg_s_new (argc, argv, klass)
      int argc;
@@ -165,6 +188,14 @@ rb_msg_s_new (argc, argv, klass)
 
   return dst;
 }
+
+/*
+ * call-seq:
+ *   send(type, buf, flags = 0) ->  MessageQueue
+ *
+ *   Send message +buf+ of type +type+ with flags +flags+. See
+ *   msgop(2).
+ */
 
 static VALUE
 rb_msg_send (argc, argv, obj)
@@ -211,6 +242,14 @@ rb_msg_send (argc, argv, obj)
 
   return obj;
 }
+
+/*
+ * call-seq:
+ *   recv(type, buf, flags = 0) ->  MessageQueue
+ *
+ *   Receive message +buf+ of type +type+ with flags +flags+. See
+ *   msgop(2).
+ */
 
 static VALUE
 rb_msg_recv (argc, argv, obj)
@@ -624,6 +663,16 @@ rb_shm_size (obj)
   return INT2FIX (shmid->shmstat.shm_segsz);
 }
 
+/*
+ * call-seq:
+ *   SemaphoreOperation.new(pos, value, flags = 0) -> SemaphoreOperation
+ *
+ *   Create a new SemaphoreOperation. +pos+ is an index identifying
+ *   a particular semaphore within a semaphore set. +value+ is the
+ *   value to added or subtracted from the semaphore. +flags+ is a
+ *   bitwise OR selected from IPC_NOWAIT and SEM_UNDO. See semop(2).
+ */
+
 static VALUE
 rb_semop_s_new (argc, argv, klass)
      int argc;
@@ -642,6 +691,13 @@ rb_semop_s_new (argc, argv, klass)
   return dst;
 }
 
+/*
+ * call-seq:
+ *   pos -> Fixnum
+ *
+ *   Return the operation semaphore position.
+ */
+
 static VALUE
 rb_semop_pos (obj)
      VALUE obj;
@@ -651,6 +707,13 @@ rb_semop_pos (obj)
   Data_Get_Struct (obj, struct sembuf, op);
   return INT2FIX (op->sem_num);
 }
+
+/*
+ * call-seq:
+ *   value -> Fixnum
+ *
+ *   Return the operation value.
+ */
 
 static VALUE
 rb_semop_value (obj)
@@ -662,6 +725,13 @@ rb_semop_value (obj)
   return INT2FIX (op->sem_op);
 }
 
+/*
+ * call-seq:
+ *   flags -> Fixnum
+ *
+ *   Return the operation flags.
+ */
+
 static VALUE
 rb_semop_flags (obj)
      VALUE obj;
@@ -671,6 +741,12 @@ rb_semop_flags (obj)
   Data_Get_Struct (obj, struct sembuf, op);
   return INT2FIX (op->sem_flg);
 }
+
+/* call-seq:
+ *   Permission.new(ipcid) -> Permission
+ *
+ *   Create a Permission object for the IPCObject +ipcid+.
+ */
 
 static VALUE
 rb_perm_s_new (klass, v_ipcid)
@@ -688,6 +764,13 @@ rb_perm_s_new (klass, v_ipcid)
   return Data_Wrap_Struct (klass, NULL, free, perm);
 }
 
+/*
+ * call-seq:
+ *   cuid -> Fixnum
+ *
+ * Return effective UID of creator.
+ */
+
 static VALUE
 rb_perm_cuid (obj)
      VALUE obj;
@@ -697,6 +780,13 @@ rb_perm_cuid (obj)
   Data_Get_Struct (obj, struct ipc_perm, perm);
   return INT2FIX (perm->cuid);
 }
+
+/*
+ * call-seq:
+ *   cgid -> Fixnum
+ *
+ * Return effective GID of creator.
+ */
 
 static VALUE
 rb_perm_cgid (obj)
@@ -708,6 +798,13 @@ rb_perm_cgid (obj)
   return INT2FIX (perm->cgid);
 }
 
+/*
+ * call-seq:
+ *   uid -> Fixnum
+ *
+ * Return effective UID of owner.
+ */
+
 static VALUE
 rb_perm_uid (obj)
      VALUE obj;
@@ -718,6 +815,13 @@ rb_perm_uid (obj)
   return INT2FIX (perm->uid);
 }
 
+/*
+ * call-seq:
+ *   gid -> Fixnum
+ *
+ * Return effective GID of owner.
+ */
+
 static VALUE
 rb_perm_gid (obj)
      VALUE obj;
@@ -727,6 +831,13 @@ rb_perm_gid (obj)
   Data_Get_Struct (obj, struct ipc_perm, perm);
   return INT2FIX (perm->gid);
 }
+
+/*
+ * call-seq:
+ *   mode -> Fixnum
+ *
+ *   Return mode bits.
+ */
 
 static VALUE
 rb_perm_mode (obj)
