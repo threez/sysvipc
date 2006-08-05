@@ -74,9 +74,9 @@ static VALUE cError;
  * call-seq:
  *   SystemVIPC.ftok(path, id) -> Fixnum
  *
- *   Convert a pathname and a project identifier to a System V IPC
- *   key. +path+ is a string filename and +id+ is an integer.
- *   See ftok(3).
+ * Convert a pathname and a project identifier to a System V IPC
+ * key. +path+ is a string filename and +id+ is an integer.
+ * See ftok(3).
  */
 
 static VALUE
@@ -118,7 +118,7 @@ get_ipcid_and_stat (obj)
 /* call-seq:
  *   remove -> IPCObject
  *
- *   Removes the IPCObject.
+ * Remove the IPCObject. Return self.
  */
 
 static VALUE
@@ -161,10 +161,11 @@ msg_rmid (msgid)
 
 /*
  * call-seq:
- *   MessageQueue.new(key, msgflg) -> MessageQueue
+ *   MessageQueue.new(key, msgflg = 0) -> MessageQueue
  *
- *   Creates a new MessageQueue with key +key+ and flags +msgflg+. See
- *   msgget(2).
+ * Creates a new MessageQueue object associated with the message
+ * queue identified by +key+. +msgflg+ is a bitwise OR selected from
+ * IPC_CREAT and IPC_EXCL. See msgget(2).
  */
 
 static VALUE
@@ -193,8 +194,8 @@ rb_msg_s_new (argc, argv, klass)
  * call-seq:
  *   send(type, buf, flags = 0) ->  MessageQueue
  *
- *   Send message +buf+ of type +type+ with flags +flags+. See
- *   msgop(2).
+ * Send message +buf+ of type +type+ with flags +flags+. Return
+ * self.  See msgop(2).
  */
 
 static VALUE
@@ -247,8 +248,8 @@ rb_msg_send (argc, argv, obj)
  * call-seq:
  *   recv(type, buf, flags = 0) ->  MessageQueue
  *
- *   Receive message +buf+ of type +type+ with flags +flags+. See
- *   msgop(2).
+ * Receive message +buf+ of type +type+ with flags +flags+. Return
+ * self. See msgop(2).
  */
 
 static VALUE
@@ -323,6 +324,16 @@ sem_rmid (semid)
   semid->id = -1;
 }
 
+/*
+ * call-seq:
+ *   Semaphore.new(key, nsems, semflg = 0) -> Semaphore
+ *
+ * Creates a new Semaphore object encapsulating the semaphore
+ * set identified by +key+. +nsems+ is the number of semaphores
+ * in the set, and +semflg+ is a bitwise OR selected from
+ * IPC_CREAT and IPC_EXCL. See semget(2).
+ */
+
 static VALUE
 rb_sem_s_new (argc, argv, klass)
      int argc;
@@ -352,6 +363,13 @@ rb_sem_s_new (argc, argv, klass)
   if (n > semid->semstat.sem_nsems)		\
     rb_raise (cError, "invalid semnum")
 
+/*
+ * call-seq:
+ *   to_a -> Array
+ *
+ * Return values for the semaphore set as an array. See semctl(2).
+ */
+
 static VALUE
 rb_sem_to_a (obj)
      VALUE obj;
@@ -373,6 +391,14 @@ rb_sem_to_a (obj)
 
   return dst;
 }
+
+/*
+ * call-seq:
+ *   set_all(array) -> Semaphore
+ *
+ * Set all values of a semaphore to corresponding values from
+ * +array+. Return self. See semctl(2).
+ */
 
 static VALUE
 rb_sem_set_all (obj, ary)
@@ -396,6 +422,12 @@ rb_sem_set_all (obj, ary)
   return obj;
 }
 
+/*
+ * call-seq: value(index) -> Fixnum
+ *
+ * Return the value of semaphore +index+. See semctl(2).
+ */
+
 static VALUE
 rb_sem_value (obj, n)
      VALUE obj, n;
@@ -410,6 +442,13 @@ rb_sem_value (obj, n)
     rb_sys_fail ("semctl(2)");
   return INT2FIX (value);
 }
+
+/*
+ * call-seq: set_value(index, value) -> Semaphore
+ *
+ * Set the value of semaphore +index+ to +value+. Return self. See
+ * semctl(2).
+ */
 
 static VALUE
 rb_sem_set_value (obj, v_pos, v_value)
@@ -428,6 +467,14 @@ rb_sem_set_value (obj, v_pos, v_value)
   return obj;
 }
 
+/*
+ * call-seq:
+ *   n_count(index) -> Fixnum
+ *
+ * Return the number of processes waiting for the value semaphore
+ * +index+ to increase. See semctl(2).
+ */
+
 static VALUE
 rb_sem_ncnt (obj, v_pos)
      VALUE obj, v_pos;
@@ -443,6 +490,14 @@ rb_sem_ncnt (obj, v_pos)
     rb_sys_fail ("semctl(2)");
   return INT2FIX (ncnt);
 }
+
+/*
+ * call-seq:
+ *   z_count(index) -> Fixnum
+ *
+ * Return the number of processes waiting for the value semaphore
+ * +index+ to become zero. See semctl(2).
+ */
 
 static VALUE
 rb_sem_zcnt (obj, v_pos)
@@ -460,6 +515,14 @@ rb_sem_zcnt (obj, v_pos)
   return INT2FIX (zcnt);
 }
 
+/*
+ * call-seq:
+ *   pid(index) -> Fixnum
+ *
+ * Return the PID of the process that executed the last semop()
+ * call for the +index+th semaphore in the set. See semctl(2).
+ */
+
 static VALUE
 rb_sem_pid (obj, v_pos)
      VALUE obj, v_pos;
@@ -476,6 +539,13 @@ rb_sem_pid (obj, v_pos)
   return INT2FIX (pid);
 }
 
+/*
+ * call-seq:
+ *   size -> Fixnum
+ *
+ * Return the number of semaphores in the set.  See semctl(2).
+ */
+
 static VALUE
 rb_sem_size (obj)
      VALUE obj;
@@ -484,6 +554,14 @@ rb_sem_size (obj)
   semid = get_ipcid_and_stat (obj);
   return INT2FIX (semid->semstat.sem_nsems);
 }
+
+/*
+ * call-seq:
+ *   apply(array) -> Semaphore
+ *
+ * Apply an +array+ of SemaphoreOperations. +array+ should have as
+ * many elements as the number of semaphores in the set.  See semop(2).
+ */
 
 static VALUE
 rb_sem_apply (obj, ary)
@@ -536,6 +614,14 @@ shm_rmid (shmid)
   shmid->id = -1;
 }
 
+/*
+ * call-seq:
+ *   SharedMemory.new(key, size = 0, flags = 0) -> SharedMemory
+ *
+ * Return a SharedMemory object encapsulating the
+ * shared memory segment associated with +key+. See shmget(2).
+ */
+
 static VALUE
 rb_shm_s_new (argc, argv, klass)
      int argc;
@@ -560,6 +646,13 @@ rb_shm_s_new (argc, argv, klass)
 
   return dst;
 }
+
+/*
+ * call-seq:
+ *   attach(flags = 0) -> SharedMemory
+ *
+ * Attach the shared memory segment. See shmat(2).
+ */
 
 static VALUE
 rb_shm_attach (argc, argv, obj)
@@ -587,6 +680,13 @@ rb_shm_attach (argc, argv, obj)
   return obj;
 }
 
+/*
+ * call-seq:
+ *   detach -> SharedMemory
+ *
+ * Detach the shared memory segment. See shmdt(2).
+ */
+
 static VALUE
 rb_shm_detach (obj)
      VALUE obj;
@@ -607,6 +707,13 @@ rb_shm_detach (obj)
 #define Check_Valid_Shm_Segsz(n, shmid)		\
   if (n > shmid->shmstat.shm_segsz)		\
     rb_raise (cError, "invalid shm_segsz")
+
+/*
+ * call-seq:
+ *   read(len = 0) -> String
+ *
+ * Read +len+ bytes from the shared memory segment. 
+ */
 
 static VALUE
 rb_shm_read (argc, argv, obj)
@@ -631,6 +738,13 @@ rb_shm_read (argc, argv, obj)
   return rb_str_new (shmid->data, len);
 }
 
+/*
+ * call-seq:
+ *   write(buf) -> SharedMemory
+ *
+ * Write data from +buf+ to the shared memory segment. 
+ */
+
 static VALUE
 rb_shm_write (obj, v_buf)
      VALUE obj, v_buf;
@@ -654,6 +768,13 @@ rb_shm_write (obj, v_buf)
   return obj;
 }
 
+/*
+ * call-seq:
+ *   size -> Fixnum
+ *
+ * Return the size of the shared memory segment.
+ */
+
 static VALUE
 rb_shm_size (obj)
      VALUE obj;
@@ -667,10 +788,10 @@ rb_shm_size (obj)
  * call-seq:
  *   SemaphoreOperation.new(pos, value, flags = 0) -> SemaphoreOperation
  *
- *   Create a new SemaphoreOperation. +pos+ is an index identifying
- *   a particular semaphore within a semaphore set. +value+ is the
- *   value to added or subtracted from the semaphore. +flags+ is a
- *   bitwise OR selected from IPC_NOWAIT and SEM_UNDO. See semop(2).
+ * Create a new SemaphoreOperation. +pos+ is an index identifying
+ * a particular semaphore within a semaphore set. +value+ is the
+ * value to added or subtracted from the semaphore. +flags+ is a
+ * bitwise OR selected from IPC_NOWAIT and SEM_UNDO. See semop(2).
  */
 
 static VALUE
@@ -695,7 +816,7 @@ rb_semop_s_new (argc, argv, klass)
  * call-seq:
  *   pos -> Fixnum
  *
- *   Return the operation semaphore position.
+ * Return the operation semaphore position. See semop(2).
  */
 
 static VALUE
@@ -712,7 +833,7 @@ rb_semop_pos (obj)
  * call-seq:
  *   value -> Fixnum
  *
- *   Return the operation value.
+ * Return the operation value. See semop(2).
  */
 
 static VALUE
@@ -729,7 +850,7 @@ rb_semop_value (obj)
  * call-seq:
  *   flags -> Fixnum
  *
- *   Return the operation flags.
+ * Return the operation flags. See semop(2).
  */
 
 static VALUE
@@ -745,7 +866,7 @@ rb_semop_flags (obj)
 /* call-seq:
  *   Permission.new(ipcid) -> Permission
  *
- *   Create a Permission object for the IPCObject +ipcid+.
+ * Create a Permission object for the IPCObject +ipcid+.
  */
 
 static VALUE
@@ -836,7 +957,7 @@ rb_perm_gid (obj)
  * call-seq:
  *   mode -> Fixnum
  *
- *   Return mode bits.
+ * Return mode bits.
  */
 
 static VALUE
