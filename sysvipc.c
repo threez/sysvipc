@@ -434,15 +434,17 @@ rb_sem_set_all (obj, ary)
  */
 
 static VALUE
-rb_sem_value (obj, n)
-     VALUE obj, n;
+rb_sem_value (obj, v_pos)
+     VALUE obj, v_pos;
 {
   struct ipcid_ds *semid;
+  int pos;
   int value;
 
   semid = get_ipcid_and_stat (obj);
-  Check_Valid_Semnum (n, semid);
-  value = semctl (semid->id, NUM2INT (n), GETVAL, 0);
+  pos = NUM2INT (v_pos);
+  Check_Valid_Semnum (pos, semid);
+  value = semctl (semid->id, pos, GETVAL, 0);
   if (value == -1)
     rb_sys_fail ("semctl(2)");
   return INT2FIX (value);
