@@ -1022,7 +1022,7 @@ void Init_sysvipc ()
   rb_define_method (cSemaphore, "z_count", rb_sem_zcnt, 1);
   rb_define_method (cSemaphore, "pid", rb_sem_pid, 1);
   rb_define_method (cSemaphore, "apply", rb_sem_apply, 1);
-  rb_define_method (cSemaphore, "size", rb_sem_size, 1);
+  rb_define_method (cSemaphore, "size", rb_sem_size, 0);
 
   cSharedMemory =
     rb_define_class_under (mSystemVIPC, "SharedMemory", cIPCObject);
