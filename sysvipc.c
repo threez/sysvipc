@@ -73,10 +73,10 @@ static VALUE cError;
 
 /*
  * call-seq:
- *   SystemVIPC.ftok(path, id) -> Fixnum
+ *   SystemVIPC.ftok(pathname, proj_id) -> Fixnum
  *
  * Convert a pathname and a project identifier to a System V IPC
- * key. +path+ is a string filename and +id+ is an integer.
+ * key. +pathname+ is a string filename and +proj_id+ is an integer.
  * See ftok(3).
  */
 
@@ -164,7 +164,7 @@ msg_rmid (msgid)
  * call-seq:
  *   MessageQueue.new(key, msgflg = 0) -> MessageQueue
  *
- * Creates a new MessageQueue object associated with the message
+ * Create a new MessageQueue object associated with the message
  * queue identified by +key+. +msgflg+ is a bitwise OR selected from
  * IPC_CREAT and IPC_EXCL. See msgget(2).
  */
@@ -193,9 +193,9 @@ rb_msg_s_new (argc, argv, klass)
 
 /*
  * call-seq:
- *   send(type, buf, flags = 0) ->  MessageQueue
+ *   send(mtype, mtext, msgflg = 0) ->  MessageQueue
  *
- * Send message +buf+ of type +type+ with flags +flags+. Return
+ * Send message +mtext+ of type +mtype+ with flags +msgflg+. Return
  * self.  See msgop(2).
  */
 
@@ -247,9 +247,9 @@ rb_msg_send (argc, argv, obj)
 
 /*
  * call-seq:
- *   recv(type, buf, flags = 0) ->  MessageQueue
+ *   recv(mtype, mtext, msgflg = 0) ->  MessageQueue
  *
- * Receive message +buf+ of type +type+ with flags +flags+. Return
+ * Receive message +mtext+ of type +mtype+ with flags +msgflg+. Return
  * self. See msgop(2).
  */
 
@@ -329,7 +329,7 @@ sem_rmid (semid)
  * call-seq:
  *   Semaphore.new(key, nsems, semflg = 0) -> Semaphore
  *
- * Creates a new Semaphore object encapsulating the semaphore
+ * Create a new Semaphore object encapsulating the semaphore
  * set identified by +key+. +nsems+ is the number of semaphores
  * in the set, and +semflg+ is a bitwise OR selected from
  * IPC_CREAT and IPC_EXCL. See semget(2).
@@ -424,9 +424,9 @@ rb_sem_set_all (obj, ary)
 }
 
 /*
- * call-seq: value(index) -> Fixnum
+ * call-seq: value(semnum) -> Fixnum
  *
- * Return the value of semaphore +index+. See semctl(2).
+ * Return the value of semaphore +semnum+. See semctl(2).
  */
 
 static VALUE
@@ -445,9 +445,9 @@ rb_sem_value (obj, n)
 }
 
 /*
- * call-seq: set_value(index, value) -> Semaphore
+ * call-seq: set_value(semnum, value) -> Semaphore
  *
- * Set the value of semaphore +index+ to +value+. Return self. See
+ * Set the value of semaphore +semnum+ to +value+. Return self. See
  * semctl(2).
  */
 
@@ -470,10 +470,10 @@ rb_sem_set_value (obj, v_pos, v_value)
 
 /*
  * call-seq:
- *   n_count(index) -> Fixnum
+ *   n_count(semnum) -> Fixnum
  *
  * Return the number of processes waiting for the value semaphore
- * +index+ to increase. See semctl(2).
+ * +semnum+ to increase. See semctl(2).
  */
 
 static VALUE
@@ -494,10 +494,10 @@ rb_sem_ncnt (obj, v_pos)
 
 /*
  * call-seq:
- *   z_count(index) -> Fixnum
+ *   z_count(semnum) -> Fixnum
  *
  * Return the number of processes waiting for the value semaphore
- * +index+ to become zero. See semctl(2).
+ * +semnum+ to become zero. See semctl(2).
  */
 
 static VALUE
@@ -518,10 +518,10 @@ rb_sem_zcnt (obj, v_pos)
 
 /*
  * call-seq:
- *   pid(index) -> Fixnum
+ *   pid(semnum) -> Fixnum
  *
  * Return the PID of the process that executed the last semop()
- * call for the +index+th semaphore in the set. See semctl(2).
+ * call for semaphore +semnum+. See semctl(2).
  */
 
 static VALUE
@@ -560,7 +560,7 @@ rb_sem_size (obj)
  * call-seq:
  *   apply(array) -> Semaphore
  *
- * Apply an +array+ of SemaphoreOperations. +array+ should have as
+ * Apply an +array+ of SemaphoreOperations. +array+ must have as
  * many elements as the number of semaphores in the set.  See semop(2).
  */
 
@@ -617,7 +617,7 @@ shm_rmid (shmid)
 
 /*
  * call-seq:
- *   SharedMemory.new(key, size = 0, flags = 0) -> SharedMemory
+ *   SharedMemory.new(key, size = 0, shmflg = 0) -> SharedMemory
  *
  * Return a SharedMemory object encapsulating the
  * shared memory segment associated with +key+. See shmget(2).
@@ -650,7 +650,7 @@ rb_shm_s_new (argc, argv, klass)
 
 /*
  * call-seq:
- *   attach(flags = 0) -> SharedMemory
+ *   attach(shmflg = 0) -> SharedMemory
  *
  * Attach the shared memory segment. See shmat(2).
  */
