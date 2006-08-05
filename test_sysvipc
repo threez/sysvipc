@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+#
+#    $Source$
+#
+#    $Revision$
+#    $Date$
+#
+#    Copyright (c) 2006 James Steven Jenkins.
+#
+
+require 'sysvipc'
+require 'test/unit'
+
+include SystemVIPC
+
+KEY = ftok(__FILE__, 0)
+
+NSEMS = 16
+
+class TestCradle < Test::Unit::TestCase
+
+  def setup
+  end
+
+  def test_msg
+  end
+
+  def test_sem
+
+    sem = Semaphore.new(KEY, NSEMS, IPC_CREAT | 0660)
+    assert Semaphore === sem
+
+    assert sem.size == NSEMS
+
+    NSEMS.times do |i|
+      assert Semaphore === sem.set_value(i, 2)
+      assert sem.value(i) == 2
+    end
+
+    sem.remove
+
+  end
+
+  def test_shm
+  end
+
+  def teardown
+  end
+
+end
