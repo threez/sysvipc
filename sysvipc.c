@@ -218,7 +218,7 @@ rb_msg_send (argc, argv, obj)
   len = RSTRING (v_buf)->len;
   buf = RSTRING (v_buf)->ptr;
 
-  msgp = xcalloc (sizeof (long) + len, sizeof (char));
+  msgp = (struct my_msgbuf *) ALLOC_N (char, sizeof (long) + len);
   msgp->mtype = NUM2LONG (v_type);
   memcpy (msgp->mtext, buf, len);
 
@@ -242,6 +242,7 @@ rb_msg_send (argc, argv, obj)
       rb_sys_fail ("msgsnd(2)");
     }
 
+  free(msgp);
   return obj;
 }
 
@@ -264,6 +265,7 @@ rb_msg_recv (argc, argv, obj)
   struct ipcid_ds *msgid;
   long type;
   size_t rlen, len;
+  VALUE ret;
 
   rb_scan_args (argc, argv, "21", &v_type, &v_len, &v_flags);
   type = NUM2LONG (v_type);
@@ -271,7 +273,7 @@ rb_msg_recv (argc, argv, obj)
   if (!NIL_P (v_flags))
     flags = NUM2INT (v_flags);
 
-  msgp = xcalloc (sizeof (long) + len, sizeof (char));
+  msgp = (struct my_msgbuf *) ALLOC_N (char, sizeof (long) + len);
   msgid = get_ipcid (obj);
 
  retry:
@@ -293,7 +295,9 @@ rb_msg_recv (argc, argv, obj)
       rb_sys_fail ("msgrcv(2)");
     }
 
-  return rb_str_new (msgp->mtext, rlen);
+  ret = rb_str_new (msgp->mtext, rlen);
+  free(msgp);
+  return ret;
 }
 
 static void
@@ -382,7 +386,7 @@ rb_sem_to_a (obj)
 
   semid = get_ipcid_and_stat (obj);
   nsems = semid->semstat.sem_nsems;
-  arg.array = xcalloc (nsems, sizeof (unsigned short int));
+  arg.array = (unsigned short int *) ALLOCA_N (unsigned short int, nsems);
 
   semctl (semid->id, 0, GETALL, arg);
 
@@ -415,7 +419,7 @@ rb_sem_set_all (obj, ary)
   if (RARRAY(ary)->len != nsems)
     rb_raise (cError, "doesn't match with semnum");
 
-  arg.array = xcalloc (nsems, sizeof (unsigned short int));
+  arg.array = (unsigned short int *) ALLOCA_N (unsigned short int, nsems);
   for (i = 0; i < nsems; i++)
     arg.array[i] = NUM2INT (RARRAY(ary)->ptr[i]);
   semctl (semid->id, 0, SETALL, arg);
@@ -575,7 +579,7 @@ rb_sem_apply (obj, ary)
   semid = get_ipcid_and_stat (obj);
   nsems = semid->semstat.sem_nsems;
   nsops = RARRAY(ary)->len;
-  array = xcalloc (nsems, sizeof (struct sembuf));
+  array = (struct sembuf *) ALLOCA_N (struct sembuf, nsems);
   for (i = 0; i < nsops; i++)
     {
       struct sembuf *op;
@@ -875,15 +879,14 @@ rb_perm_s_new (klass, v_ipcid)
      VALUE klass, v_ipcid;
 {
   struct ipcid_ds *ipcid;
-  struct ipc_perm *perm;
+  struct ipc_perm perm;
 
   Data_Get_Struct (v_ipcid, struct ipcid_ds, ipcid);
   ipcid->stat (ipcid);
 
-  perm = xmalloc (sizeof (struct ipc_perm));
-  memcpy (perm, ipcid->perm (ipcid), sizeof (struct ipc_perm));
+  memcpy (&perm, ipcid->perm (ipcid), sizeof (struct ipc_perm));
   
-  return Data_Wrap_Struct (klass, NULL, free, perm);
+  return Data_Wrap_Struct (klass, NULL, free, &perm);
 }
 
 /*
