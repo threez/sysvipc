@@ -342,7 +342,7 @@ rb_sem_s_new (argc, argv, klass)
 {
   struct ipcid_ds *semid;
   VALUE dst, v_key, v_nsems, v_semflg;
-  int nsems;
+  int nsems = 0;
 
   dst = Data_Make_Struct (klass, struct ipcid_ds, NULL, free, semid);
   rb_scan_args (argc, argv, "12", &v_key, &v_nsems, &v_semflg);
@@ -630,7 +630,7 @@ rb_shm_s_new (argc, argv, klass)
 {
   struct ipcid_ds *shmid;
   VALUE dst, v_key, v_size, v_shmflg;
-  int size;
+  int size = 0;
 
   dst = Data_Make_Struct (klass, struct ipcid_ds, NULL, free, shmid);
   rb_scan_args (argc, argv, "12", &v_key, &v_size, &v_shmflg);
