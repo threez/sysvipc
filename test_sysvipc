@@ -13,6 +13,8 @@ require 'test/unit'
 
 include SystemVIPC
 
+THREAD_SAFE = false
+
 KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
@@ -51,8 +53,17 @@ class TestCradle < Test::Unit::TestCase
       sleep 1
       msg.send(1, "message 1")
     end
-      assert "message 1" == msg.recv(1, 100)
+    assert "message 1" == msg.recv(1, 100)
     Process.wait
+
+    if THREAD_SAFE
+      t = Thread.new do
+	sleep 1
+	msg.send(2, "message 2")
+      end
+      assert "message 2" == msg.recv(2, 100)
+      t.join
+    end
 
     msg.remove
 
@@ -116,6 +127,15 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(release)
     Process.wait
 
+    if THREAD_SAFE
+      t = Thread.new do
+	sleep 1
+	assert sem == sem.apply(acquire)
+      end
+      assert sem == sem.apply(release)
+      t.join
+    end
+
     sem.remove
 
   end
@@ -151,6 +171,15 @@ class TestCradle < Test::Unit::TestCase
     end
     assert data == shm.read(SHMSIZE)
     Process.wait
+
+    if THREAD_SAFE
+      t = Thread.new do
+	sleep 1
+	shm.write(data)
+      end
+      assert data == shm.read(SHMSIZE)
+      t.join
+    end
 
     assert shm == shm.detach
 
