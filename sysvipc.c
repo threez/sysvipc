@@ -566,8 +566,7 @@ rb_sem_size (obj)
  * call-seq:
  *   apply(array) -> Semaphore
  *
- * Apply an +array+ of SemaphoreOperations. +array+ must have as
- * many elements as the number of semaphores in the set.  See semop(2).
+ * Apply an +array+ of SemaphoreOperations.  See semop(2).
  */
 
 static VALUE

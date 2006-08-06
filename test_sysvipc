@@ -30,6 +30,15 @@ class TestCradle < Test::Unit::TestCase
     sem = Semaphore.new(KEY, NSEMS, IPC_CREAT | 0660)
     assert Semaphore === sem
 
+    uid = Process.uid
+    gid = Process.gid
+    perm = Permission.new(sem)
+    assert Permission === perm
+    assert uid == perm.uid
+    assert gid == perm.gid
+    assert uid == perm.cuid
+    assert gid == perm.cgid
+
     assert sem.size == NSEMS
 
     NSEMS.times do |i|
