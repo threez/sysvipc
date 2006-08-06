@@ -111,6 +111,15 @@ class TestCradle < Test::Unit::TestCase
     shm = SharedMemory.new(KEY, SHMSIZE, IPC_CREAT | 0660)
     assert SharedMemory === shm
 
+    uid = Process.uid
+    gid = Process.gid
+    perm = Permission.new(shm)
+    assert Permission === perm
+    assert uid == perm.uid
+    assert gid == perm.gid
+    assert uid == perm.cuid
+    assert gid == perm.cgid
+
     assert SHMSIZE === shm.size
 
     assert shm == shm.attach
