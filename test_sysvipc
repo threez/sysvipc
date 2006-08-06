@@ -33,12 +33,12 @@ class TestCradle < Test::Unit::TestCase
     assert sem.size == NSEMS
 
     NSEMS.times do |i|
-      assert Semaphore === sem.set_value(i, 2)
+      assert sem == sem.set_value(i, 2)
       assert 2 == sem.value(i)
     end
 
     values = Array.new(NSEMS, 1)
-    assert Semaphore === sem.set_all(values)
+    assert sem == sem.set_all(values)
     assert values == sem.to_a
 
     pid = Process.pid
@@ -64,8 +64,8 @@ class TestCradle < Test::Unit::TestCase
       release << op
     end
 
-    assert Semaphore === sem.apply(acquire)
-    assert Semaphore === sem.apply(release)
+    assert sem == sem.apply(acquire)
+    assert sem == sem.apply(release)
 
     sem.remove
 
