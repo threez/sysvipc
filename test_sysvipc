@@ -16,6 +16,7 @@ include SystemVIPC
 KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
+NSEMOPS = 10
 NMSGS = 16
 SHMSIZE = 1024
 
@@ -84,7 +85,7 @@ class TestCradle < Test::Unit::TestCase
 
     acquire = []
     release = []
-    NSEMS.times do |i|
+    NSEMOPS.times do |i|
       op = SemaphoreOperation.new(i, -1)
       assert i == op.pos
       assert -1 == op.value
