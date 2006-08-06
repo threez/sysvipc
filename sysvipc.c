@@ -2,7 +2,7 @@
   sysvipc.c - SystemV IPC support for Ruby
 
   Copyright (C) 2001, 2006  Daiki Ueno
-  Copyright (C) 2006  Steven Jenkins
+  Copyright (C) 2006  James Steven Jenkins
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
