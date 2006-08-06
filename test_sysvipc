@@ -48,6 +48,7 @@ class TestCradle < Test::Unit::TestCase
     end
 
     Process.fork do
+      sleep 1
       msg.send(1, "message 1")
     end
       assert "message 1" == msg.recv(1, 100)
@@ -109,6 +110,7 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(release)
 
     Process.fork do
+      sleep 1
       assert sem == sem.apply(acquire)
     end
     assert sem == sem.apply(release)
@@ -144,6 +146,7 @@ class TestCradle < Test::Unit::TestCase
     assert data == shm.read(SHMSIZE)
 
     Process.fork do
+      sleep 1
       shm.write(data)
     end
     assert data == shm.read(SHMSIZE)
