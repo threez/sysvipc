@@ -205,7 +205,7 @@ rb_msg_send (argc, argv, obj)
      VALUE *argv, obj;
 {
   VALUE v_type, v_buf, v_flags;
-  int flags = 0, error;
+  int flags = 0, error, nowait;
   struct my_msgbuf *msgp;
   struct ipcid_ds *msgid;
   char *buf;
@@ -223,6 +223,10 @@ rb_msg_send (argc, argv, obj)
   memcpy (msgp->mtext, buf, len);
 
   msgid = get_ipcid (obj);
+
+  nowait = flags & IPC_NOWAIT;
+  flags |= IPC_NOWAIT;
+
  retry:
   TRAP_BEG;
   error = msgsnd (msgid->id, msgp, len, flags);
@@ -232,12 +236,12 @@ rb_msg_send (argc, argv, obj)
       switch (errno)
 	{
 	case EINTR:
-	  rb_thread_schedule ();
 	case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  goto retry;
+	  rb_thread_schedule ();
+	  if (!nowait) goto retry;
 	}
       rb_sys_fail ("msgsnd(2)");
     }
@@ -260,7 +264,7 @@ rb_msg_recv (argc, argv, obj)
      VALUE *argv, obj;
 {
   VALUE v_type, v_len, v_flags;
-  int flags = 0;
+  int flags = 0, nowait;
   struct my_msgbuf *msgp;
   struct ipcid_ds *msgid;
   long type;
@@ -276,6 +280,9 @@ rb_msg_recv (argc, argv, obj)
   msgp = (struct my_msgbuf *) ALLOC_N (char, sizeof (long) + len);
   msgid = get_ipcid (obj);
 
+  nowait = flags & IPC_NOWAIT;
+  flags |= IPC_NOWAIT;
+
  retry:
   TRAP_BEG;
   rlen = msgrcv (msgid->id, msgp, len, type, flags);
@@ -285,12 +292,13 @@ rb_msg_recv (argc, argv, obj)
       switch (errno)
 	{
 	case EINTR:
-	  rb_thread_schedule ();
+	case ENOMSG:
 	case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  goto retry;
+	  rb_thread_schedule ();
+	  if (!nowait) goto retry;
 	}
       rb_sys_fail ("msgrcv(2)");
     }
