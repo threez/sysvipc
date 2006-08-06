@@ -56,14 +56,11 @@ class TestCradle < Test::Unit::TestCase
     assert "message 1" == msg.recv(1, 100)
     Process.wait
 
-    if THREAD_SAFE
-      t = Thread.new do
-	sleep 1
-	msg.send(2, "message 2")
-      end
-      assert "message 2" == msg.recv(2, 100)
-      t.join
+    t = Thread.new do
+      sleep 1
+      msg.send(2, "message 2")
     end
+    assert "message 2" == msg.recv(2, 100)
 
     msg.remove
 
@@ -121,19 +118,22 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(release)
 
     Process.fork do
+      sem.apply(acquire)
       sleep 1
-      assert sem == sem.apply(acquire)
+      sem.apply(release)
     end
+    assert sem == sem.apply(acquire)
     assert sem == sem.apply(release)
     Process.wait
 
     if THREAD_SAFE
       t = Thread.new do
+	sem.apply(acquire)
 	sleep 1
-	assert sem == sem.apply(acquire)
+	sem.apply(release)
       end
+      assert sem == sem.apply(acquire)
       assert sem == sem.apply(release)
-      t.join
     end
 
     sem.remove
@@ -158,28 +158,26 @@ class TestCradle < Test::Unit::TestCase
 
     assert shm == shm.attach
 
-    data = ''
+    adata = ''
+    bdata = ''
     SHMSIZE.times do |i|
-      data << 'A'
+      adata << 'A'
+      bdata << 'B'
     end
-    assert shm == shm.write(data)
-    assert data == shm.read(SHMSIZE)
+    assert shm == shm.write(adata)
+    assert adata == shm.read(SHMSIZE)
 
     Process.fork do
-      sleep 1
-      shm.write(data)
+      shm.write(bdata)
     end
-    assert data == shm.read(SHMSIZE)
     Process.wait
+    assert bdata == shm.read(SHMSIZE)
 
-    if THREAD_SAFE
-      t = Thread.new do
-	sleep 1
-	shm.write(data)
-      end
-      assert data == shm.read(SHMSIZE)
-      t.join
+    t = Thread.new do
+      shm.write(adata)
     end
+    t.join
+    assert adata == shm.read(SHMSIZE)
 
     assert shm == shm.detach
 
