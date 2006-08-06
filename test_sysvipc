@@ -17,6 +17,7 @@ KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
 NMSGS = 16
+SHMSIZE = 1024
 
 class TestCradle < Test::Unit::TestCase
 
@@ -105,6 +106,25 @@ class TestCradle < Test::Unit::TestCase
   end
 
   def test_shm
+
+    shm = SharedMemory.new(KEY, SHMSIZE, IPC_CREAT | 0660)
+    assert SharedMemory === shm
+
+    assert SHMSIZE === shm.size
+
+    assert shm == shm.attach
+
+    data = ''
+    SHMSIZE.times do |i|
+      data << 'A'
+    end
+    assert shm == shm.write(data)
+    assert data == shm.read(SHMSIZE)
+
+    assert shm == shm.detach
+
+    shm.remove
+
   end
 
   def teardown
