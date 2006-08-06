@@ -881,14 +881,11 @@ rb_perm_s_new (klass, v_ipcid)
      VALUE klass, v_ipcid;
 {
   struct ipcid_ds *ipcid;
-  struct ipc_perm perm;
 
   Data_Get_Struct (v_ipcid, struct ipcid_ds, ipcid);
   ipcid->stat (ipcid);
 
-  memcpy (&perm, ipcid->perm (ipcid), sizeof (struct ipc_perm));
-  
-  return Data_Wrap_Struct (klass, NULL, free, &perm);
+  return Data_Wrap_Struct (klass, NULL, NULL, ipcid->perm (ipcid));
 }
 
 /*
