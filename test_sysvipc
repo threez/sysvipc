@@ -16,6 +16,7 @@ include SystemVIPC
 KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
+NMSGS = 16
 
 class TestCradle < Test::Unit::TestCase
 
@@ -23,6 +24,29 @@ class TestCradle < Test::Unit::TestCase
   end
 
   def test_msg
+
+    msg = MessageQueue.new(KEY, IPC_CREAT | 0660)
+    assert MessageQueue === msg
+
+    uid = Process.uid
+    gid = Process.gid
+    perm = Permission.new(msg)
+    assert Permission === perm
+    assert uid == perm.uid
+    assert gid == perm.gid
+    assert uid == perm.cuid
+    assert gid == perm.cgid
+
+    1.upto(NMSGS) do |i|
+      assert msg == msg.send(i, "message #{i}")
+    end
+
+    NMSGS.downto(1) do |i|
+      assert "message #{i}" == msg.recv(i, 100)
+    end
+
+    msg.remove
+
   end
 
   def test_sem
