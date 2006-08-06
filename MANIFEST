@@ -2,3 +2,4 @@ MANIFEST
 extconf.rb
 sysvipc.c
 sysvipc.rd
+test_sysvipc
