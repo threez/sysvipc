@@ -34,8 +34,38 @@ class TestCradle < Test::Unit::TestCase
 
     NSEMS.times do |i|
       assert Semaphore === sem.set_value(i, 2)
-      assert sem.value(i) == 2
+      assert 2 == sem.value(i)
     end
+
+    values = Array.new(NSEMS, 1)
+    assert Semaphore === sem.set_all(values)
+    assert values == sem.to_a
+
+    pid = Process.pid
+    NSEMS.times do |i|
+      assert pid == sem.pid(i)
+      assert 0 == sem.n_count(i)
+      assert 0 == sem.z_count(i)
+    end
+
+    acquire = []
+    release = []
+    NSEMS.times do |i|
+      op = SemaphoreOperation.new(i, -1)
+      assert i == op.pos
+      assert -1 == op.value
+      assert 0 == op.flags
+      acquire << op
+
+      op = SemaphoreOperation.new(i, 1)
+      assert i == op.pos
+      assert 1 == op.value
+      assert 0 == op.flags
+      release << op
+    end
+
+    assert Semaphore === sem.apply(acquire)
+    assert Semaphore === sem.apply(release)
 
     sem.remove
 
