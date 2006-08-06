@@ -248,10 +248,10 @@ rb_msg_send (argc, argv, obj)
 
 /*
  * call-seq:
- *   recv(mtype, mtext, msgflg = 0) ->  MessageQueue
+ *   recv(mtype, msgsz, msgflg = 0) ->  MessageQueue
  *
- * Receive message +mtext+ of type +mtype+ with flags +msgflg+. Return
- * self. See msgop(2).
+ * Receive up to +msgsq+ bytes of the next message of type +mtype+
+ * with flags +msgflg+. Return self. See msgop(2).
  */
 
 static VALUE
