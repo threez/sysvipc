@@ -583,7 +583,7 @@ rb_sem_apply (obj, ary)
 {
   struct ipcid_ds *semid;
   struct sembuf *array;
-  int nsops, i, nsems;
+  int nsops, i, nsems, error, nowait = 0;
 
   semid = get_ipcid_and_stat (obj);
   nsems = semid->semstat.sem_nsems;
@@ -593,12 +593,31 @@ rb_sem_apply (obj, ary)
     {
       struct sembuf *op;
       Data_Get_Struct (RARRAY(ary)->ptr[i], struct sembuf, op);
+      nowait = nowait && (op->sem_flg & IPC_NOWAIT);
+      op->sem_flg |= IPC_NOWAIT;
       memcpy (&array[i], op, sizeof (struct sembuf));
       Check_Valid_Semnum (array[i].sem_num, semid);
     }
       
-  if (semop (semid->id, array, nsops) == -1)
-    rb_sys_fail ("semop(2)");
+ retry:
+  TRAP_BEG;
+  error = semop (semid->id, array, nsops);
+  TRAP_END;
+  if (error == -1)
+    {
+      switch (errno)
+	{
+	case EINTR:
+	case EWOULDBLOCK:
+#if EAGAIN != EWOULDBLOCK
+	case EAGAIN:
+#endif
+	  rb_thread_schedule ();
+	  if (!nowait) goto retry;
+	}
+      rb_sys_fail ("semop(2)");
+    }
+
   return obj;
 }
 

@@ -13,8 +13,6 @@ require 'test/unit'
 
 include SystemVIPC
 
-THREAD_SAFE = false
-
 KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
@@ -126,15 +124,13 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(release)
     Process.wait
 
-    if THREAD_SAFE
-      t = Thread.new do
-	sem.apply(acquire)
-	sleep 1
-	sem.apply(release)
-      end
-      assert sem == sem.apply(acquire)
-      assert sem == sem.apply(release)
+    t = Thread.new do
+      sem.apply(acquire)
+      sleep 1
+      sem.apply(release)
     end
+    assert sem == sem.apply(acquire)
+    assert sem == sem.apply(release)
 
     sem.remove
 
