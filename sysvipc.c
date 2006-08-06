@@ -871,9 +871,9 @@ rb_semop_flags (obj)
 }
 
 /* call-seq:
- *   Permission.new(ipcid) -> Permission
+ *   Permission.new(ipcobject) -> Permission
  *
- * Create a Permission object for the IPCObject +ipcid+.
+ * Create a Permission object for +ipcobject+.
  */
 
 static VALUE
