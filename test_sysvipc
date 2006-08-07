@@ -154,26 +154,24 @@ class TestCradle < Test::Unit::TestCase
 
     assert shm == shm.attach
 
-    adata = ''
-    bdata = ''
-    SHMSIZE.times do |i|
-      adata << 'A'
-      bdata << 'B'
-    end
+    data_size = SHMSIZE - 1
+    adata = 'A' * data_size
+    bdata = 'B' * data_size
+
     assert shm == shm.write(adata)
-    assert adata == shm.read(SHMSIZE)
+    assert adata == shm.read(data_size)
 
     Process.fork do
       shm.write(bdata)
     end
     Process.wait
-    assert bdata == shm.read(SHMSIZE)
+    assert bdata == shm.read(data_size)
 
     t = Thread.new do
       shm.write(adata)
     end
     t.join
-    assert adata == shm.read(SHMSIZE)
+    assert adata == shm.read(data_size)
 
     assert shm == shm.detach
 
