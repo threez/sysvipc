@@ -999,6 +999,93 @@ rb_perm_mode (obj)
   return INT2FIX (perm->mode);
 }
 
+/*
+ * Document-class: SystemVIPC
+ *
+ * = SystemVIPC
+ *
+ * Ruby module for System V Inter-Process Communication:
+ * message queues, semaphores, and shared memory.
+ *
+ * Copyright (C) 2001, 2006 Daiki Ueno.
+ * Copyright (C) 2006 James Steven Jenkins.
+ *
+ * == Usage Synopsis
+ * === Common Code
+ *
+ * All programs using this module must include
+ *
+ *     require 'sysvipc'
+ *
+ * It may be convenient to add
+ *
+ *     include SystemVIPC
+ *
+ * All IPC objects are identified by a key. SystemVIPC includes a
+ * convenience function for mapping file names and integer IDs into a
+ * key:
+ *
+ *     key = ftok('/a/file/that/must/exist', 0)
+ *
+ * Any IPC object +ipc+ can be removed after use by
+ *
+ *     ipc.remove
+ *
+ * === Message Queues
+ *
+ * Get (create if necessary) a message queue:
+ *
+ *     mq = MessageQueue.new(key, IPC_CREAT | 0600)
+ *
+ * Send a message of type 0:
+ *
+ *     mq.send(0, 'message')
+ *
+ * Receive up to 100 bytes from the first message of type 0:
+ *
+ *     msg = mq.recv(0, 100)
+ *
+ * === Semaphores
+ *
+ * Get (create if necessary) a set of 5 semaphores:
+ *
+ *     sm = Semaphore.new(key, 5, IPC_CREAT | 0600)
+ *
+ * Initialize semaphores if newly created:
+ *
+ *     sm.set_all(Array.new(5, 1)) if sm.pid(0) == 0
+ *
+ * Acquire semaphore 2 (waiting if necessary):
+ *
+ *     sm.apply([SemaphoreOperation.new(2, -1)])
+ *
+ * Release semaphore 2:
+ *
+ *     sm.apply([SemaphoreOperation.new(2, 1)])
+ *
+ * === Shared Memory
+ *
+ * Get (create if necessary) an 8192-byte shared memory region:
+ *
+ *     sh = SharedMemory(key, 8192, IPC_CREAT | 0660)
+ *
+ * Attach shared memory:
+ *
+ *     sh.attach
+ *
+ * Write data:
+ *
+ *     sh.write('testing')
+ *
+ * Read 100 bytes of data:
+ *
+ *     data = sh.read(100);
+ *
+ * Detach shared memory:
+ *
+ *     sh.detach
+ */
+
 void Init_sysvipc ()
 {
   VALUE mSystemVIPC, cPermission, cIPCObject, cSemaphoreOparation;
