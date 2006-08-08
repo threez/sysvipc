@@ -115,22 +115,23 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(acquire)
     assert sem == sem.apply(release)
 
+    assert sem == sem.apply(acquire)
     Process.fork do
       sem.apply(acquire)
-      sleep 1
       sem.apply(release)
     end
-    assert sem == sem.apply(acquire)
+    sleep 1
     assert sem == sem.apply(release)
     Process.wait
 
+    assert sem == sem.apply(acquire)
     t = Thread.new do
       sem.apply(acquire)
-      sleep 1
       sem.apply(release)
     end
-    assert sem == sem.apply(acquire)
+    sleep 1
     assert sem == sem.apply(release)
+    t.join
 
     sem.remove
 
