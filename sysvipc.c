@@ -488,6 +488,11 @@ rb_sem_set_value (obj, v_pos, v_value)
  *
  * Return the number of processes waiting for the value semaphore
  * +semnum+ to increase. See semctl(2).
+ *
+ * *Note*: Ruby processes or threads waiting for a semaphore do not
+ * increment this counter. The SystemVIPC module calls the
+ * underlying semop(2) with the IPC_NOWAIT flag to preserve
+ * compatibility with Ruby threads.
  */
 
 static VALUE
@@ -512,6 +517,11 @@ rb_sem_ncnt (obj, v_pos)
  *
  * Return the number of processes waiting for the value semaphore
  * +semnum+ to become zero. See semctl(2).
+ *
+ * *Note*: Ruby processes or threads waiting for a semaphore do not
+ * increment this counter. The SystemVIPC module calls the
+ * underlying semop(2) with the IPC_NOWAIT flag to preserve
+ * compatibility with Ruby threads.
  */
 
 static VALUE
