@@ -1007,6 +1007,9 @@ rb_perm_mode (obj)
  * Ruby module for System V Inter-Process Communication:
  * message queues, semaphores, and shared memory.
  *
+ * Hosted as project sysvipc[http://rubyforge.org/projects/sysvipc/]
+ * on RubyForge[http://rubyforge.org/].
+ *
  * Copyright (C) 2001, 2006 Daiki Ueno.
  * Copyright (C) 2006 James Steven Jenkins.
  *
