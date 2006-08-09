@@ -115,23 +115,40 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.apply(acquire)
     assert sem == sem.apply(release)
 
+    rd, wr = IO.pipe
+    wr.write '1'
     assert sem == sem.apply(acquire)
     Process.fork do
+      rd.close
+      wr.write '2'
       sem.apply(acquire)
+      wr.write '4'
       sem.apply(release)
+      wr.write '5'
+      wr.close
     end
     sleep 1
+    wr.write '3'
     assert sem == sem.apply(release)
+    wr.close
     Process.wait
+    assert '12345' == rd.read
+    rd.close
 
+    seq = '1'
     assert sem == sem.apply(acquire)
     t = Thread.new do
+      seq << '2'
       sem.apply(acquire)
+      seq << '4'
       sem.apply(release)
+      seq << '5'
     end
     sleep 1
+    seq << '3'
     assert sem == sem.apply(release)
     t.join
+    assert '12345' == seq
 
     sem.remove
 
