@@ -1,6 +1,11 @@
 /*
- * sysvipc.c - SystemV IPC support for Ruby
+ * SystemVIPC: SystemV IPC support for Ruby
  * 
+ * $Source$
+ *
+ * $Revision$
+ * $Date$
+ *
  * Copyright (C) 2001, 2006  Daiki Ueno
  * Copyright (C) 2006  James Steven Jenkins
  * 
