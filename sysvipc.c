@@ -1,23 +1,63 @@
 /*
-  sysvipc.c - SystemV IPC support for Ruby
-
-  Copyright (C) 2001, 2006  Daiki Ueno
-  Copyright (C) 2006  James Steven Jenkins
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ * sysvipc.c - SystemV IPC support for Ruby
+ * 
+ * Copyright (C) 2001, 2006  Daiki Ueno
+ * Copyright (C) 2006  James Steven Jenkins
+ * 
+ * SysVIPC is copyrighted free software by Daiki Ueno, Steven Jenkins,
+ * and others.  You can redistribute it and/or modify it under either
+ * the terms of the GNU General Public License Version 2 (see file 'GPL'),
+ * or the conditions below:
+ * 
+ *   1. You may make and give away verbatim copies of the source form of the
+ *      software without restriction, provided that you duplicate all of the
+ *      original copyright notices and associated disclaimers.
+ * 
+ *   2. You may modify your copy of the software in any way, provided that
+ *      you do at least ONE of the following:
+ * 
+ *        a) place your modifications in the Public Domain or otherwise
+ *           make them Freely Available, such as by posting said
+ * 	  modifications to Usenet or an equivalent medium, or by allowing
+ * 	  the author to include your modifications in the software.
+ * 
+ *        b) use the modified software only within your corporation or
+ *           organization.
+ * 
+ *        c) rename any non-standard executables so the names do not conflict
+ * 	  with standard executables, which must also be provided.
+ * 
+ *        d) make other distribution arrangements with the author.
+ * 
+ *   3. You may distribute the software in object code or executable
+ *      form, provided that you do at least ONE of the following:
+ * 
+ *        a) distribute the executables and library files of the software,
+ * 	  together with instructions (in the manual page or equivalent)
+ * 	  on where to get the original distribution.
+ * 
+ *        b) accompany the distribution with the machine-readable source of
+ * 	  the software.
+ * 
+ *        c) give non-standard executables non-standard names, with
+ *           instructions on where to get the original software distribution.
+ * 
+ *        d) make other distribution arrangements with the author.
+ * 
+ *   4. You may modify and include the part of the software into any other
+ *      software (possibly commercial).  
+ * 
+ *   5. The scripts and library files supplied as input to or produced as 
+ *      output from the software do not automatically fall under the
+ *      copyright of the software, but belong to whomever generated them, 
+ *      and may be sold commercially, and may be aggregated with this
+ *      software.
+ * 
+ *   6. THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR
+ *      IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+ *      WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *      PURPOSE.
+ */
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -1097,6 +1137,16 @@ rb_perm_mode (obj)
  * Detach shared memory:
  *
  *     sh.detach
+ *
+ * == Installation
+ *
+ * 1. <tt>ruby extconf.rb</tt>
+ * 2. <tt>make</tt>
+ * 3. <tt>make install</tt> (requires appropriate privilege)
+ *
+ * == Testing
+ *
+ * 1. <tt>./test_sysvipc</tt>
  */
 
 void Init_sysvipc ()
