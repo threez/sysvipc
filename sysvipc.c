@@ -97,15 +97,14 @@ struct ipcid_ds {
   void *data;
 };
 
-struct my_msgbuf {
+#if !defined(HAVE_TYPE_STRUCT_MSGBUF)
+struct msgbuf {
   long mtype;
   char mtext[1];
 };
+#endif
 
-#if (defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__APPLE_CC__)
-/* union semun is defined by including <sys/sem.h> */
-#else
-/* according to X/OPEN we have to define it ourselves */
+#if !defined(HAVE_TYPE_UNION_SEMUN)
 union semun {
   int val;                    /* value for SETVAL */
   struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
@@ -251,7 +250,7 @@ rb_msg_send (argc, argv, obj)
 {
   VALUE v_type, v_buf, v_flags;
   int flags = 0, error, nowait;
-  struct my_msgbuf *msgp;
+  struct msgbuf *msgp;
   struct ipcid_ds *msgid;
   char *buf;
   size_t len;
@@ -263,7 +262,7 @@ rb_msg_send (argc, argv, obj)
   len = RSTRING (v_buf)->len;
   buf = RSTRING (v_buf)->ptr;
 
-  msgp = (struct my_msgbuf *) ALLOC_N (char, sizeof (long) + len);
+  msgp = (struct msgbuf *) ALLOC_N (char, sizeof (long) + len);
   msgp->mtype = NUM2LONG (v_type);
   memcpy (msgp->mtext, buf, len);
 
@@ -310,7 +309,7 @@ rb_msg_recv (argc, argv, obj)
 {
   VALUE v_type, v_len, v_flags;
   int flags = 0, nowait;
-  struct my_msgbuf *msgp;
+  struct msgbuf *msgp;
   struct ipcid_ds *msgid;
   long type;
   size_t rlen, len;
@@ -322,7 +321,7 @@ rb_msg_recv (argc, argv, obj)
   if (!NIL_P (v_flags))
     flags = NUM2INT (v_flags);
 
-  msgp = (struct my_msgbuf *) ALLOC_N (char, sizeof (long) + len);
+  msgp = (struct msgbuf *) ALLOC_N (char, sizeof (long) + len);
   msgid = get_ipcid (obj);
 
   nowait = flags & IPC_NOWAIT;
