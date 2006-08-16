@@ -7,21 +7,7 @@ require 'mkmf'
 def have_type(type, header = nil, opt = "", &b)
   checking_for type do
     header = cpp_include(header)
-    if try_compile(<<"SRC", opt, &b) or (/\A\w+\z/n =~ type && try_compile(<<"SRC", opt, &b))
-#{COMMON_HEADERS}
-#{header}
-/*top*/
-int
-main ()
-{
-if ((#{type} *) 0)
-  return 0;
-if (sizeof (#{type}))
-  return 0;
-  ;
-  return 0;
-}
-SRC
+    if try_compile(<<"SRC", opt, &b)
 #{COMMON_HEADERS}
 #{header}
 /*top*/
