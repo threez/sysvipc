@@ -16,7 +16,7 @@ include SystemVIPC
 KEY = ftok(__FILE__, 0)
 
 NSEMS = 16
-NSEMOPS = 10
+NSEMOPS = 5
 NMSGS = 16
 SHMSIZE = 1024
 
@@ -89,9 +89,7 @@ class TestCradle < Test::Unit::TestCase
     assert sem == sem.set_all(values)
     assert values == sem.to_a
 
-    pid = Process.pid
     NSEMS.times do |i|
-      assert pid == sem.pid(i)
       assert 0 == sem.n_count(i)
       assert 0 == sem.z_count(i)
     end
@@ -114,6 +112,11 @@ class TestCradle < Test::Unit::TestCase
 
     assert sem == sem.apply(acquire)
     assert sem == sem.apply(release)
+
+    pid = Process.pid
+    NSEMOPS.times do |i|
+      assert pid == sem.pid(i)
+    end
 
     rd, wr = IO.pipe
     wr.write '1'
