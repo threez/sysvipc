@@ -298,7 +298,7 @@ rb_msg_send (argc, argv, obj)
  * call-seq:
  *   recv(mtype, msgsz, msgflg = 0) ->  MessageQueue
  *
- * Receive up to +msgsq+ bytes of the next message of type +mtype+
+ * Receive up to +msgsz+ bytes of the next message of type +mtype+
  * with flags +msgflg+. Return self. See msgop(2).
  */
 
