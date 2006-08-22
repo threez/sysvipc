@@ -64,6 +64,9 @@
  *      PURPOSE.
  */
 
+#define RUBY_SYSVIPC_TV_SEC		0
+#define RUBY_SYSVIPC_TV_USEC		1000
+
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -254,6 +257,10 @@ rb_msg_send (argc, argv, obj)
   struct ipcid_ds *msgid;
   char *buf;
   size_t len;
+  struct timeval sleep;
+
+  sleep.tv_sec = RUBY_SYSVIPC_TV_SEC;
+  sleep.tv_usec = RUBY_SYSVIPC_TV_USEC;
 
   rb_scan_args (argc, argv, "21", &v_type, &v_buf, &v_flags);
   if (!NIL_P (v_flags))
@@ -284,7 +291,7 @@ rb_msg_send (argc, argv, obj)
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_schedule ();
+	  rb_thread_wait_for (sleep);
 	  if (!nowait) goto retry;
 	}
       rb_sys_fail ("msgsnd(2)");
@@ -314,6 +321,10 @@ rb_msg_recv (argc, argv, obj)
   long type;
   size_t rlen, len;
   VALUE ret;
+  struct timeval sleep;
+
+  sleep.tv_sec = RUBY_SYSVIPC_TV_SEC;
+  sleep.tv_usec = RUBY_SYSVIPC_TV_USEC;
 
   rb_scan_args (argc, argv, "21", &v_type, &v_len, &v_flags);
   type = NUM2LONG (v_type);
@@ -341,7 +352,7 @@ rb_msg_recv (argc, argv, obj)
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_schedule ();
+	  rb_thread_wait_for (sleep);
 	  if (!nowait) goto retry;
 	}
       rb_sys_fail ("msgrcv(2)");
@@ -638,6 +649,10 @@ rb_sem_apply (obj, ary)
   struct ipcid_ds *semid;
   struct sembuf *array;
   int nsops, i, nsems, error, nowait = 0;
+  struct timeval sleep;
+
+  sleep.tv_sec = RUBY_SYSVIPC_TV_SEC;
+  sleep.tv_usec = RUBY_SYSVIPC_TV_USEC;
 
   semid = get_ipcid_and_stat (obj);
   nsems = semid->semstat.sem_nsems;
@@ -666,7 +681,7 @@ rb_sem_apply (obj, ary)
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_schedule ();
+	  rb_thread_wait_for (sleep);
 	  if (!nowait) goto retry;
 	}
       rb_sys_fail ("semop(2)");
