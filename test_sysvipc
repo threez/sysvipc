@@ -28,37 +28,37 @@ class TestCradle < Test::Unit::TestCase
   def test_msg
 
     msg = MessageQueue.new(KEY, IPC_CREAT | 0660)
-    assert MessageQueue === msg
+    assert_instance_of(MessageQueue, msg, 'MessageQueue.new')
 
     uid = Process.uid
     gid = Process.gid
     perm = Permission.new(msg)
-    assert Permission === perm
-    assert uid == perm.uid
-    assert gid == perm.gid
-    assert uid == perm.cuid
-    assert gid == perm.cgid
+    assert_instance_of(Permission, perm, 'Permission.new')
+    assert_equal(uid, perm.uid, 'Permission#uid')
+    assert_equal(gid, perm.gid, 'Permission#gid')
+    assert_equal(uid, perm.cuid, 'Permission#cuid')
+    assert_equal(gid, perm.cgid, 'Permission#cgid')
 
     1.upto(NMSGS) do |i|
-      assert msg == msg.send(i, "message #{i}")
+      assert_equal(msg, msg.send(i, "message #{i}"), 'MessageQueue#send')
     end
 
     NMSGS.downto(1) do |i|
-      assert "message #{i}" == msg.recv(i, 100)
+      assert_equal("message #{i}", msg.recv(i, 100), 'MessageQueue#recv')
     end
 
     Process.fork do
       sleep 1
-      msg.send(1, "message 1")
+      msg.send(1, 'message 1')
     end
-    assert "message 1" == msg.recv(1, 100)
+    assert_equal("message 1", msg.recv(1, 100), 'MessageQueue#recv')
     Process.wait
 
     t = Thread.new do
       sleep 1
-      msg.send(2, "message 2")
+      msg.send(2, 'message 2')
     end
-    assert "message 2" == msg.recv(2, 100)
+    assert_equal('message 2', msg.recv(2, 100), 'MessageQueue#recv')
 
     msg.remove
 
@@ -67,60 +67,61 @@ class TestCradle < Test::Unit::TestCase
   def test_sem
 
     sem = Semaphore.new(KEY, NSEMS, IPC_CREAT | 0660)
-    assert Semaphore === sem
+    assert_kind_of(Semaphore, sem, 'Semaphore.new')
 
     uid = Process.uid
     gid = Process.gid
     perm = Permission.new(sem)
-    assert Permission === perm
-    assert uid == perm.uid
-    assert gid == perm.gid
-    assert uid == perm.cuid
-    assert gid == perm.cgid
+    assert_instance_of(Permission, perm, 'Permission.new')
+    assert_equal(uid, perm.uid, 'Permission#uid')
+    assert_equal(gid, perm.gid, 'Permission#gid')
+    assert_equal(uid, perm.cuid, 'Permission#cuid')
+    assert_equal(gid, perm.cgid, 'Permission#cgid')
 
-    assert sem.size == NSEMS
+    assert_equal(sem.size, NSEMS, 'Semaphore#size')
 
     NSEMS.times do |i|
-      assert sem == sem.set_value(i, 2)
-      assert 2 == sem.value(i)
+      assert_equal(sem, sem.set_value(i, 2), 'Semaphore#set_value')
+      assert_equal(2, sem.value(i), 'Semaphore#value')
     end
 
     values = Array.new(NSEMS, 1)
-    assert sem == sem.set_all(values)
-    assert values == sem.to_a
+    assert_equal(sem, sem.set_all(values), 'Semaphore#set_all')
+    assert_equal(values, sem.to_a, 'Semaphore#to_a')
 
     NSEMS.times do |i|
-      assert 0 == sem.n_count(i)
-      assert 0 == sem.z_count(i)
+      assert_equal(0, sem.n_count(i), 'Semaphore#n_count')
+      assert_equal(0, sem.z_count(i), 'Semaphore#z_count')
     end
 
     acquire = []
     release = []
     NSEMOPS.times do |i|
       op = SemaphoreOperation.new(i, -1)
-      assert i == op.pos
-      assert -1 == op.value
-      assert 0 == op.flags
+      assert_kind_of(SemaphoreOperation, op, 'SemaphoreOperation.new')
+      assert_equal(i, op.pos, 'SemaphoreOperation#pos')
+      assert_equal(-1, op.value, 'SemaphoreOperation#value')
+      assert_equal(0, op.flags, 'SemaphoreOperation#flags')
       acquire << op
 
       op = SemaphoreOperation.new(i, 1)
-      assert i == op.pos
-      assert 1 == op.value
-      assert 0 == op.flags
+      assert_equal(i, op.pos, 'SemaphoreOperation#pos')
+      assert_equal(1, op.value, 'SemaphoreOperation#value')
+      assert_equal(0, op.flags, 'SemaphoreOperation#flags')
       release << op
     end
 
-    assert sem == sem.apply(acquire)
-    assert sem == sem.apply(release)
+    assert_equal(sem, sem.apply(acquire), 'Semaphore#apply')
+    assert_equal(sem, sem.apply(release), 'Semaphore#apply')
 
     pid = Process.pid
     NSEMOPS.times do |i|
-      assert pid == sem.pid(i)
+      assert_equal(pid, sem.pid(i), 'Semaphore#pid')
     end
 
     rd, wr = IO.pipe
     wr.write '1'
-    assert sem == sem.apply(acquire)
+    assert_equal(sem, sem.apply(acquire), 'Semaphore#apply')
     Process.fork do
       rd.close
       wr.write '2'
@@ -132,14 +133,14 @@ class TestCradle < Test::Unit::TestCase
     end
     sleep 1
     wr.write '3'
-    assert sem == sem.apply(release)
+    assert_equal(sem, sem.apply(release), 'Semaphore#apply')
     wr.close
     Process.wait
-    assert '12345' == rd.read
+    assert_equal('12345', rd.read, 'Semaphore')
     rd.close
 
     seq = '1'
-    assert sem == sem.apply(acquire)
+    assert_equal(sem, sem.apply(acquire), 'Semaphore#apply')
     t = Thread.new do
       seq << '2'
       sem.apply(acquire)
@@ -149,9 +150,9 @@ class TestCradle < Test::Unit::TestCase
     end
     sleep 1
     seq << '3'
-    assert sem == sem.apply(release)
+    assert_equal(sem, sem.apply(release), 'Semaphore#apply')
     t.join
-    assert '12345' == seq
+    assert_equal('12345', seq, 'Semaphore')
 
     sem.remove
 
@@ -160,41 +161,41 @@ class TestCradle < Test::Unit::TestCase
   def test_shm
 
     shm = SharedMemory.new(KEY, SHMSIZE, IPC_CREAT | 0660)
-    assert SharedMemory === shm
+    assert_kind_of(SharedMemory, shm, 'SharedMemory.new')
 
     uid = Process.uid
     gid = Process.gid
     perm = Permission.new(shm)
-    assert Permission === perm
-    assert uid == perm.uid
-    assert gid == perm.gid
-    assert uid == perm.cuid
-    assert gid == perm.cgid
+    assert_instance_of(Permission, perm, 'Permission.new')
+    assert_equal(uid, perm.uid, 'Permission#uid')
+    assert_equal(gid, perm.gid, 'Permission#gid')
+    assert_equal(uid, perm.cuid, 'Permission#cuid')
+    assert_equal(gid, perm.cgid, 'Permission#cgid')
 
-    assert SHMSIZE === shm.size
+    assert_equal(SHMSIZE, shm.size, 'SharedMemory#size')
 
-    assert shm == shm.attach
+    assert_equal(shm, shm.attach, 'SharedMemory#attach')
 
     data_size = SHMSIZE - 1
     adata = 'A' * data_size
     bdata = 'B' * data_size
 
-    assert shm == shm.write(adata)
-    assert adata == shm.read(data_size)
+    assert_equal(shm, shm.write(adata), 'SharedMemory#write')
+    assert_equal(adata, shm.read(data_size), 'SharedMemory#read')
 
     Process.fork do
       shm.write(bdata)
     end
     Process.wait
-    assert bdata == shm.read(data_size)
+    assert_equal(bdata, shm.read(data_size), 'SharedMemory#read')
 
     t = Thread.new do
       shm.write(adata)
     end
     t.join
-    assert adata == shm.read(data_size)
+    assert_equal(adata, shm.read(data_size), 'SharedMemory#read')
 
-    assert shm == shm.detach
+    assert_equal(shm, shm.detach, 'SharedMemory#detach')
 
     shm.remove
 
