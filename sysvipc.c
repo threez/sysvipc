@@ -276,7 +276,7 @@ rb_msg_send (argc, argv, obj)
   msgid = get_ipcid (obj);
 
   nowait = flags & IPC_NOWAIT;
-  flags |= IPC_NOWAIT;
+  if (!rb_thread_alone()) flags |= IPC_NOWAIT;
 
  retry:
   TRAP_BEG;
@@ -287,12 +287,16 @@ rb_msg_send (argc, argv, obj)
       switch (errno)
 	{
 	case EINTR:
+	    goto retry;
 	case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_wait_for (sleep);
-	  if (!nowait) goto retry;
+	    if (!nowait)
+	      {
+		rb_thread_wait_for (sleep);
+		goto retry;
+	      }
 	}
       rb_sys_fail ("msgsnd(2)");
     }
@@ -336,7 +340,7 @@ rb_msg_recv (argc, argv, obj)
   msgid = get_ipcid (obj);
 
   nowait = flags & IPC_NOWAIT;
-  flags |= IPC_NOWAIT;
+  if (!rb_thread_alone()) flags |= IPC_NOWAIT;
 
  retry:
   TRAP_BEG;
@@ -347,13 +351,17 @@ rb_msg_recv (argc, argv, obj)
       switch (errno)
 	{
 	case EINTR:
+	    goto retry;
 	case ENOMSG:
 	case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_wait_for (sleep);
-	  if (!nowait) goto retry;
+	    if (!nowait)
+	      {
+		rb_thread_wait_for (sleep);
+		goto retry;
+	      }
 	}
       rb_sys_fail ("msgrcv(2)");
     }
@@ -544,10 +552,10 @@ rb_sem_set_value (obj, v_pos, v_value)
  * Return the number of processes waiting for the value semaphore
  * +semnum+ to increase. See semctl(2).
  *
- * *Note*: Ruby processes or threads waiting for a semaphore do not
- * increment this counter. The SystemVIPC module calls the
- * underlying semop(2) with the IPC_NOWAIT flag to preserve
- * compatibility with Ruby threads.
+ * *Note*: Ruby threads waiting for a semaphore do not increment
+ * this counter. In a multi-threaded program, the SystemVIPC
+ * module emulates waiting by repeatedly calling the underlying
+ * semop(2) with the IPC_NOWAIT flag set and sleeping between calls.
  */
 
 static VALUE
@@ -573,10 +581,10 @@ rb_sem_ncnt (obj, v_pos)
  * Return the number of processes waiting for the value semaphore
  * +semnum+ to become zero. See semctl(2).
  *
- * *Note*: Ruby processes or threads waiting for a semaphore do not
- * increment this counter. The SystemVIPC module calls the
- * underlying semop(2) with the IPC_NOWAIT flag to preserve
- * compatibility with Ruby threads.
+ * *Note*: Ruby threads waiting for a semaphore do not increment
+ * this counter. In a multi-threaded program, the SystemVIPC
+ * module emulates waiting by repeatedly calling the underlying
+ * semop(2) with the IPC_NOWAIT flag set and sleeping between calls.
  */
 
 static VALUE
@@ -663,7 +671,7 @@ rb_sem_apply (obj, ary)
       struct sembuf *op;
       Data_Get_Struct (RARRAY(ary)->ptr[i], struct sembuf, op);
       nowait = nowait && (op->sem_flg & IPC_NOWAIT);
-      op->sem_flg |= IPC_NOWAIT;
+      if (!rb_thread_alone()) op->sem_flg |= IPC_NOWAIT;
       memcpy (&array[i], op, sizeof (struct sembuf));
       Check_Valid_Semnum (array[i].sem_num, semid);
     }
@@ -677,12 +685,16 @@ rb_sem_apply (obj, ary)
       switch (errno)
 	{
 	case EINTR:
+	    goto retry;
 	case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
 	case EAGAIN:
 #endif
-	  rb_thread_wait_for (sleep);
-	  if (!nowait) goto retry;
+	  if (!nowait)
+	    {
+	      rb_thread_wait_for (sleep);
+	      goto retry;
+	    }
 	}
       rb_sys_fail ("semop(2)");
     }
