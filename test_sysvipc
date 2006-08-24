@@ -8,6 +8,8 @@
 #    Copyright (c) 2006 James Steven Jenkins.
 #
 
+$:.unshift(ENV['PWD'])
+
 require 'sysvipc'
 require 'test/unit'
 
