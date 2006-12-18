@@ -185,6 +185,12 @@ class TestCradle < Test::Unit::TestCase
     assert_equal(shm, shm.write(adata), 'SharedMemory#write')
     assert_equal(adata, shm.read(data_size), 'SharedMemory#read')
 
+    assert_equal(shm, shm.write('test123'), 'SharedMemory#write')
+    assert_equal('123', shm.read(3, 4), 'SharedMemory#read')
+
+    assert_equal(shm, shm.write('test', 4), 'SharedMemory#write')
+    assert_equal('testtest', shm.read(8, 0), 'SharedMemory#read')
+
     Process.fork do
       shm.write(bdata)
     end

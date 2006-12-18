@@ -809,9 +809,10 @@ rb_shm_detach (obj)
 
 /*
  * call-seq:
- *   read(len = 0) -> String
+ *   read(len = 0, offset = 0) -> String
  *
- * Read +len+ bytes from the shared memory segment. 
+ * Read +len+ bytes from the shared memory segment starting at
+ * optional +offset+.
  */
 
 static VALUE
@@ -820,8 +821,8 @@ rb_shm_read (argc, argv, obj)
      VALUE *argv, obj;
 {
   struct ipcid_ds *shmid;
-  VALUE v_len;
-  int len;
+  VALUE v_len, v_offset;
+  int len, offset = 0;
 
   shmid = get_ipcid (obj);
   if (!shmid->data)
@@ -829,38 +830,50 @@ rb_shm_read (argc, argv, obj)
   shmid->stat (shmid);
 
   len = shmid->shmstat.shm_segsz;
-  rb_scan_args (argc, argv, "01", &v_len);
+
+  rb_scan_args (argc, argv, "02", &v_len, &v_offset);
   if (!NIL_P (v_len))
     len = NUM2INT (v_len);
-  Check_Valid_Shm_Segsz (len, shmid);
+  if (!NIL_P (v_offset))
+    offset = NUM2INT (v_offset);
+  Check_Valid_Shm_Segsz (len + offset, shmid);
 
-  return rb_str_new (shmid->data, len);
+  return rb_str_new (shmid->data + offset, len);
 }
 
 /*
  * call-seq:
- *   write(buf) -> SharedMemory
+ *   write(buf, offset = 0) -> SharedMemory
  *
- * Write data from +buf+ to the shared memory segment. 
+ * Write data from +buf+ to the shared memory segment at
+ * optional +offset+ offset.
  */
 
 static VALUE
-rb_shm_write (obj, v_buf)
-     VALUE obj, v_buf;
+rb_shm_write (argc, argv, obj)
+     int argc;
+     VALUE *argv, obj;
 {
   struct ipcid_ds *shmid;
-  int i, len;
+  int i, len, offset = 0;
   char *buf;
+  VALUE v_buf;
 
   shmid = get_ipcid (obj);
   if (!shmid->data)
     rb_raise (cError, "detached memory");
   shmid->stat (shmid);
 
-  len = RSTRING (v_buf)->len;
-  Check_Valid_Shm_Segsz (len, shmid);
+  v_buf = argv[0];
 
-  buf = shmid->data;
+  if (argc == 2)
+    offset = NUM2INT (argv[1]);
+
+  len = RSTRING (v_buf)->len;
+  Check_Valid_Shm_Segsz (len + offset, shmid);
+
+  buf = shmid->data + offset;
+
   for (i = 0; i < len; i++)
     *buf++ = RSTRING (v_buf)->ptr[i];
 
@@ -1221,7 +1234,7 @@ void Init_sysvipc ()
   rb_define_method (cSharedMemory, "attach", rb_shm_attach, -1);
   rb_define_method (cSharedMemory, "detach", rb_shm_detach, 0);
   rb_define_method (cSharedMemory, "read", rb_shm_read, -1);
-  rb_define_method (cSharedMemory, "write", rb_shm_write, 1);
+  rb_define_method (cSharedMemory, "write", rb_shm_write, -1);
   rb_define_method (cSharedMemory, "size", rb_shm_size, 0);
 
   rb_define_const (mSystemVIPC, "IPC_PRIVATE", INT2FIX (IPC_PRIVATE));
