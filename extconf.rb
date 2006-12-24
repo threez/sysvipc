@@ -1,31 +1,34 @@
 require 'mkmf'
 
-# This modified verion of have_type uses a check adapted from GNU
-# autoconf 2.59. It prevents false negatives caused by optimization in
-# gcc 4.x.
+# This modified verion of have_type uses a check suggested by Nobu
+# Nakada.  It prevents false detection of nonexistent types caused
+# by optimization in gcc 4.x. Mkmf in versions 1.9 and later
+# apparently fixes the problem.
 
-def have_type(type, header = nil, opt = "", &b)
-  checking_for type do
-    header = cpp_include(header)
-    if try_compile(<<"SRC", opt, &b)
+major, minor = RUBY_VERSION.split(/\./).map { |n| n.to_i }
+ok =  (major > 1) or (major == 1 and minor > 8)
+unless ok
+  def have_type(type, header = nil, opt = "", &b)
+    checking_for type do
+      header = cpp_include(header)
+      if try_compile(<<"SRC", opt, &b)
 #{COMMON_HEADERS}
 #{header}
 /*top*/
 int
 main ()
 {
-if ((#{type} *) 0)
-  return 0;
-if (sizeof (#{type}))
-  return 0;
-  ;
-  return 0;
+    typedef #{type} conftest_type;
+    int conftestval[sizeof(conftest_type)?1:-1];
+    int main() {return 0;}
+    int t() {return conftestval[0];}
 }
 SRC
-      $defs.push(format("-DHAVE_TYPE_%s", type.strip.upcase.tr_s("^A-Z0-9_", "_")))
-      true
-    else
-      false
+	$defs.push(format("-DHAVE_TYPE_%s", type.strip.upcase.tr_s("^A-Z0-9_", "_")))
+	true
+      else
+	false
+      end
     end
   end
 end
