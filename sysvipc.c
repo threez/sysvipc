@@ -831,7 +831,7 @@ rb_shm_read (argc, argv, obj)
 
   len = shmid->shmstat.shm_segsz;
 
-  rb_scan_args (argc, argv, "02", &v_len, &v_offset);
+  rb_scan_args (argc, argv, "11", &v_len, &v_offset);
   if (!NIL_P (v_len))
     len = NUM2INT (v_len);
   if (!NIL_P (v_offset))
