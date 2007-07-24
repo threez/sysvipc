@@ -1089,8 +1089,8 @@ rb_perm_mode (obj)
  * Hosted as project sysvipc[http://rubyforge.org/projects/sysvipc/]
  * on RubyForge[http://rubyforge.org/].
  *
- * Copyright (C) 2001, 2006 Daiki Ueno.
- * Copyright (C) 2006 James Steven Jenkins.
+ * Copyright (C) 2001, 2006, 2007  Daiki Ueno
+ * Copyright (C) 2006, 2007  James Steven Jenkins
  *
  * == Usage Synopsis
  * === Common Code
