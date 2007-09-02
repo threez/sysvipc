@@ -218,7 +218,7 @@ rb_msg_s_new (argc, argv, klass)
      int argc;
      VALUE *argv, klass;
 {
-  struct ipcid_ds *msgid;
+  struct ipcid_ds msgid_s, *msgid = &msgid_s;
   VALUE dst, v_key, v_msgflg;
 
   dst = Data_Make_Struct (klass, struct ipcid_ds, NULL, free, msgid);
