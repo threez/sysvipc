@@ -156,6 +156,14 @@ class TestCradle < Test::Unit::TestCase
     t.join
     assert_equal('12345', seq, 'Semaphore')
 
+    
+    nowait = [SemaphoreOperation.new(0, -1, IPC_NOWAIT)]
+    assert_equal(sem, sem.apply(acquire), 'Semaphore#apply')
+    exception = assert_raise(Errno::EAGAIN) do
+      sem.apply(nowait)
+    end
+    assert_equal(sem, sem.apply(release), 'Semaphore#apply')
+
     sem.remove
 
   end

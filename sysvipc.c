@@ -655,7 +655,7 @@ rb_sem_apply (obj, ary)
     {
       struct sembuf *op;
       Data_Get_Struct (RARRAY(ary)->ptr[i], struct sembuf, op);
-      nowait = nowait && (op->sem_flg & IPC_NOWAIT);
+      nowait = nowait || (op->sem_flg & IPC_NOWAIT);
       if (!rb_thread_alone()) op->sem_flg |= IPC_NOWAIT;
       memcpy (&array[i], op, sizeof (struct sembuf));
       Check_Valid_Semnum (array[i].sem_num, semid);
@@ -681,7 +681,7 @@ rb_sem_apply (obj, ary)
 	      goto retry;
 	    }
 	}
-      rb_sys_fail ("semop(2)");
+	rb_sys_fail ("semop(2)");
     }
 
   return obj;
@@ -1209,6 +1209,7 @@ void Init_sysvipc ()
 
   cError =
     rb_define_class_under (mSystemVIPC, "Error", rb_eStandardError);
+
   cMessageQueue =
     rb_define_class_under (mSystemVIPC, "MessageQueue", cIPCObject);
   rb_define_singleton_method (cMessageQueue, "new", rb_msg_s_new, -1);
