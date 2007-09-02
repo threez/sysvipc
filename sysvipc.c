@@ -262,7 +262,7 @@ rb_msg_send (argc, argv, obj)
   len = RSTRING (v_buf)->len;
   buf = RSTRING (v_buf)->ptr;
 
-  msgp = (struct msgbuf *) ALLOC_N (char, sizeof (long) + len);
+  msgp = (struct msgbuf *) ALLOCA_N (char, sizeof (long) + len);
   msgp->mtype = NUM2LONG (v_type);
   memcpy (msgp->mtext, buf, len);
 
@@ -294,7 +294,6 @@ rb_msg_send (argc, argv, obj)
       rb_sys_fail ("msgsnd(2)");
     }
 
-  free(msgp);
   return obj;
 }
 
@@ -325,7 +324,7 @@ rb_msg_recv (argc, argv, obj)
   if (!NIL_P (v_flags))
     flags = NUM2INT (v_flags);
 
-  msgp = (struct msgbuf *) ALLOC_N (char, sizeof (long) + len);
+  msgp = (struct msgbuf *) ALLOCA_N (char, sizeof (long) + len);
   msgid = get_ipcid (obj);
 
   nowait = flags & IPC_NOWAIT;
@@ -356,7 +355,6 @@ rb_msg_recv (argc, argv, obj)
     }
 
   ret = rb_str_new (msgp->mtext, rlen);
-  free(msgp);
   return ret;
 }
 
