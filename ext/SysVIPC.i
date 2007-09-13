@@ -1,4 +1,74 @@
+/*
+ * SysVIPC: System V IPC support for Ruby
+ * 
+ * $Source$
+ *
+ * $Revision$
+ * $Date$
+ *
+ * Copyright (C) 2001, 2006, 2007  Daiki Ueno
+ * Copyright (C) 2006, 2007  James Steven Jenkins
+ * 
+ * SysVIPC is copyrighted free software by Daiki Ueno, Steven Jenkins,
+ * and others.  You can redistribute it and/or modify it under either
+ * the terms of the GNU General Public License Version 2 (see file 'GPL'),
+ * or the conditions below:
+ * 
+ *   1. You may make and give away verbatim copies of the source form of the
+ *      software without restriction, provided that you duplicate all of the
+ *      original copyright notices and associated disclaimers.
+ * 
+ *   2. You may modify your copy of the software in any way, provided that
+ *      you do at least ONE of the following:
+ * 
+ *        a) place your modifications in the Public Domain or otherwise
+ *           make them Freely Available, such as by posting said
+ * 	  modifications to Usenet or an equivalent medium, or by allowing
+ * 	  the author to include your modifications in the software.
+ * 
+ *        b) use the modified software only within your corporation or
+ *           organization.
+ * 
+ *        c) rename any non-standard executables so the names do not conflict
+ * 	  with standard executables, which must also be provided.
+ * 
+ *        d) make other distribution arrangements with the author.
+ * 
+ *   3. You may distribute the software in object code or executable
+ *      form, provided that you do at least ONE of the following:
+ * 
+ *        a) distribute the executables and library files of the software,
+ * 	  together with instructions (in the manual page or equivalent)
+ * 	  on where to get the original distribution.
+ * 
+ *        b) accompany the distribution with the machine-readable source of
+ * 	  the software.
+ * 
+ *        c) give non-standard executables non-standard names, with
+ *           instructions on where to get the original software distribution.
+ * 
+ *        d) make other distribution arrangements with the author.
+ * 
+ *   4. You may modify and include the part of the software into any other
+ *      software (possibly commercial).  
+ * 
+ *   5. The scripts and library files supplied as input to or produced as 
+ *      output from the software do not automatically fall under the
+ *      copyright of the software, but belong to whomever generated them, 
+ *      and may be sold commercially, and may be aggregated with this
+ *      software.
+ * 
+ *   6. THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR
+ *      IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+ *      WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *      PURPOSE.
+ */
+
 %module SysVIPC
+
+/*
+ * Headers and declarations required by generated C wrapper code.
+ */
 
 %{
 #include <rubysig.h>
@@ -29,6 +99,12 @@ struct Semun {
 
 %}
 
+/*
+ * SWIG Interface Definitions
+ *
+ * Based on Single Unix Specification, Version 2.
+ */
+
 %include typemaps.i
 
 /* globals */
@@ -41,21 +117,35 @@ extern const int errno;
 
 /* typedefs */
 
+/*
+ * SWIG doesn't care how big the following are, just that they are
+ * arithmetic types. 
+ */
+
 typedef unsigned gid_t;
 typedef unsigned key_t;
 typedef unsigned mode_t;
-typedef unsigned pid_t;
+typedef int      pid_t;
+typedef unsigned size_t;
+typedef in       ssize_t;
+typedef unsigned time_t;
 typedef unsigned uid_t;
-#if 0
-typedef int size_t;
-typedef int time_t;
-#endif
 
 /*
  * sys/ipc.h
  */
 
 /* constants */
+
+/*
+ * Normally, these would be defined with #define, but SWIG interpolates
+ * the value of constants when it runs, which results in constants
+ * with the literal values as defined on the machine running SWIG. The
+ * Single Unix Specification, however, specifies only that these
+ * constants exist, not that they have any particular value. The
+ * following block inserts code to generate Ruby constants whose value
+ * is set at compile time, appropriate for the execution platform.
+ */
 
 %init %{
 #define def_const(name) rb_define_const(mSysVIPC, #name, SWIG_From_int(name))
@@ -153,6 +243,21 @@ struct sembuf {
     short int          sem_flg;
 };
 
+/*
+ * The following is necessary to deal with the array member of union
+ * semun. The wrapper code can't tell if it's safe to free the memory
+ * pointed to by array because some other member may have been written
+ * last. To work around that, we define a struct Semun with the same
+ * members, ensure that the array member is always initialized and
+ * freed as required, and insert a shim before calling semctl() that
+ * builds a local union semun by copying the proper element from
+ * struct Semun.
+ */
+
+/*
+ * Typemaps for converting Ruby arrays to and from unsigned short [].
+ */
+
 %typemap(in) unsigned short [ANY] {
   unsigned short *ap;
   int i, len;
@@ -166,11 +271,6 @@ struct sembuf {
   }
 }
 
-%typemap(memberin) unsigned short [ANY] {
-  free($1);
-  $1 = $input;
-}
-
 %typemap(out) unsigned short [ANY] {
   int i, len;
 
@@ -180,6 +280,22 @@ struct sembuf {
     rb_ary_store($result, i, INT2FIX(*($1++)));
   }
 }
+
+/*
+ * Typemap to free memory pointed to by array member before assigning
+ * to it.
+ */
+
+%typemap(memberin) unsigned short [ANY] {
+  free($1);
+  $1 = $input;
+}
+
+/*
+ * Constructor and destructor for struct Semun. Copied from the
+ * default SWIG code and adapted to initialize and free the array
+ * member.
+ */
 
 %{
 #ifdef HAVE_RB_DEFINE_ALLOC_FUNC
@@ -220,6 +336,11 @@ free_Semun(struct Semun *arg1) {
 }
 %}
 
+/*
+ * Tell SWIG not to generate default constructor and destructor for
+ * struct Semun.
+ */
+
 %nodefaultctor Semun;
 %nodefaultdtor Semun;
 
@@ -229,10 +350,18 @@ struct Semun {
     unsigned short  array[];
 };
 
+/*
+ * Install our constructor and destructor.
+ */
+
 %init %{
   rb_define_method(cSemun.klass, "initialize", _wrap_new_Semun, -1);
   rb_define_alloc_func(cSemun.klass, _wrap_Semun_allocate);
 %}
+
+/*
+ * Typemap to allow semctl() to take an optional final argument.
+ */
 
 %typemap(default) struct Semun {
     $1.val = 0;
@@ -241,6 +370,10 @@ struct Semun {
 }
 
 /* functions */
+
+/*
+ * Shim semctl() to build union semun on the fly.
+ */
 
 %rename(semctl) inner_semctl;
 %inline %{
@@ -267,6 +400,11 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun arg)
 
 int   semget(key_t, int, int);
 
+/*
+ * Typemap to convert Ruby array into array of struct sembuf
+ * for semop().
+ */
+
 %typemap(in) struct sembuf [ANY] {
   struct sembuf *sp, *t;
   int i, len;
@@ -279,6 +417,10 @@ int   semget(key_t, int, int);
     memcpy(sp++, t, sizeof(struct sembuf));
   }
 }
+
+/*
+ * Shim semop() to make it thread-safe.
+ */
 
 %rename(semop) inner_semop;
 %inline %{
