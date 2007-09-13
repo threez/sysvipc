@@ -66,24 +66,6 @@ class TestSysVIPC < Test::Unit::TestCase
     
     assert_equal(SEMVAL, semctl(semid, 0, GETVAL))
 
-    # Increment two semaphores.
-
-    sembufs = Array.new(2) { Sembuf.new }
-    sembufs.each do |s|
-      s.sem_op = 1
-    end
-    status = semop(semid, sembufs, 1)
-    assert_not_equal(-1, status)
-
-    # Decrement two semaphores.
-
-    sembufs.each_index do |i|
-      sembufs[i].sem_num = i
-      sembufs[i].sem_op = -1
-    end
-    status = semop(semid, sembufs, 1)
-    assert_not_equal(-1, status)
-
     # Check PID.
 
     assert_equal(Process.pid, semctl(semid, 0, GETPID))
@@ -120,6 +102,80 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_equal(Process.uid, semun.buf.sem_perm.uid)
     assert_equal(Process.gid, semun.buf.sem_perm.gid)
     assert_equal(MODE, semun.buf.sem_perm.mode)
+
+    # Build acquire/release operation arrays.
+
+    acquire = []
+    release = []
+    NSEMOPS.times do |i|
+      asb = Sembuf.new
+      asb.sem_num = i
+      asb.sem_op = -1
+      asb.sem_flg = 0
+      acquire << asb
+
+      rsb = Sembuf.new
+      rsb.sem_num = i
+      rsb.sem_op = 1
+      rsb.sem_flg = 0
+      release << rsb
+
+    end
+
+    # Initialize semaphores for acquire/release test.
+
+    NSEMOPS.times do |i|
+      semun.val = 1
+      status = semctl(semid, i, SETVAL, semun)
+      assert_not_equal(-1, status)
+    end
+
+    # Test acquire/release with processes.
+
+    rd, wr = IO.pipe
+    wr.write '1'
+    status = semop(semid, acquire, NSEMOPS)
+    assert_not_equal(-1, status)
+    Process.fork do
+      rd.close
+      wr.write '2'
+      status = semop(semid, acquire, NSEMOPS)
+      assert_not_equal(-1, status)
+      wr.write '4'
+      status = semop(semid, release, NSEMOPS)
+      assert_not_equal(-1, status)
+      wr.write '5'
+      wr.close
+    end
+    sleep 1
+    wr.write '3'
+    status = semop(semid, release, NSEMOPS)
+    assert_not_equal(-1, status)
+    wr.close
+    Process.wait
+    assert_equal('12345', rd.read)
+    rd.close
+
+    # Test acquire/release with threads.
+
+    seq = '1'
+    status = semop(semid, acquire, NSEMOPS)
+    assert_not_equal(-1, status)
+    t = Thread.new do
+      seq << '2'
+      status = semop(semid, acquire, NSEMOPS)
+      assert_not_equal(-1, status)
+      seq << '4'
+      status = semop(semid, release, NSEMOPS)
+      assert_not_equal(-1, status)
+      seq << '5'
+    end
+    sleep 1
+    seq << '3'
+    status = semop(semid, release, NSEMOPS)
+    assert_not_equal(-1, status)
+    t.join
+    assert_equal('12345', seq)
 
     # Remove semaphore set.
 
