@@ -1,5 +1,11 @@
 GPL
 MANIFEST
-extconf.rb
-sysvipc.c
-test_sysvipc
+post-setup.rb
+setup.rb
+ext/MANIFEST
+ext/SysVIPC.c
+ext/SysVIPC.i
+ext/extconf.rb
+lib/SysVIPC.rb
+test/test_sysvipc_h
+test/test_sysvipc_l

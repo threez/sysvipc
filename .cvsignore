@@ -1,4 +1,4 @@
-mkmf.log
 *.tar.gz
-Makefile
+*.zip
+.config
 doc

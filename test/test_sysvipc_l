@@ -1,0 +1,137 @@
+#!/usr/bin/env ruby
+#
+#    $Source$
+#
+#    $Revision$
+#    $Date$
+#
+#    Copyright (c) 2006 James Steven Jenkins.
+#
+
+$:.unshift File.join(File.dirname(__FILE__), '../ext')
+
+require 'SysVIPC.so'
+require 'test/unit'
+
+include SysVIPC
+
+MODE = 0660
+NSEMS = 16
+NSEMOPS = 5
+NMSGS = 16
+SEMVAL = 10
+SHMSIZE = 1024
+
+class TestSysVIPC < Test::Unit::TestCase
+
+  def setup
+    @msgs = []
+    @shms = []
+  end
+
+  def test_msg
+  end
+
+  def test_sem
+
+    # Create a semaphore set.
+
+    semid = semget(IPC_PRIVATE, NSEMS, IPC_CREAT | MODE)
+    assert_not_equal(-1, semid)
+
+    # Initalize semaphore set.
+
+    values = []
+    1.upto(NSEMS) { |i| values << 2 * i + 1}
+    semun = Semun.new
+    semun.array = values
+    assert_equal(values, semun.array)
+    status = semctl(semid, 0, SETALL, semun)
+    assert_not_equal(-1, status)
+    assert_equal(values, semun.array)
+
+    # Check initialized values.
+
+    status = semctl(semid, 0, GETALL, semun)
+    assert_not_equal(-1, status)
+    assert_equal(values, semun.array)
+
+    # Set a single semaphore value.
+
+    semun.val = SEMVAL
+    status = semctl(semid, 0, SETVAL, semun)
+    assert_not_equal(-1, status)
+
+    # Get single semaphore value.
+    
+    assert_equal(SEMVAL, semctl(semid, 0, GETVAL))
+
+    # Increment two semaphores.
+
+    sembufs = Array.new(2) { Sembuf.new }
+    sembufs.each do |s|
+      s.sem_op = 1
+    end
+    status = semop(semid, sembufs, 1)
+    assert_not_equal(-1, status)
+
+    # Decrement two semaphores.
+
+    sembufs.each_index do |i|
+      sembufs[i].sem_num = i
+      sembufs[i].sem_op = -1
+    end
+    status = semop(semid, sembufs, 1)
+    assert_not_equal(-1, status)
+
+    # Check PID.
+
+    assert_equal(Process.pid, semctl(semid, 0, GETPID))
+
+    # Get wait counts.
+
+    assert_equal(0, semctl(semid, 0, GETNCNT))
+    assert_equal(0, semctl(semid, 0, GETZCNT))
+
+    # Get Semid_ds.
+
+    semun.buf = Semid_ds.new
+    status = semctl(semid, 0, IPC_STAT, semun)
+    assert_not_equal(-1, status)
+
+    assert_equal(NSEMS, semun.buf.sem_nsems)
+
+    assert_equal(Process.uid, semun.buf.sem_perm.uid)
+    assert_equal(Process.gid, semun.buf.sem_perm.gid)
+    assert_equal(MODE, semun.buf.sem_perm.mode)
+
+    # Set Semid_ds.
+
+    status = semctl(semid, 0, IPC_SET, semun)
+    assert_not_equal(-1, status)
+
+    # Check Semid_ds again.
+
+    status = semctl(semid, 0, IPC_STAT, semun)
+    assert_not_equal(-1, status)
+
+    assert_equal(NSEMS, semun.buf.sem_nsems)
+
+    assert_equal(Process.uid, semun.buf.sem_perm.uid)
+    assert_equal(Process.gid, semun.buf.sem_perm.gid)
+    assert_equal(MODE, semun.buf.sem_perm.mode)
+
+    # Remove semaphore set.
+
+    status = semctl(semid, 0, IPC_RMID)
+    assert_not_equal(-1, status)
+
+  end
+
+  def test_shm
+  end
+
+  def teardown
+  end
+
+end

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-FILES=sysvipc.c
-
-rdoc -t 'sysvipc: System V IPC for Ruby' -m SystemVIPC $FILES

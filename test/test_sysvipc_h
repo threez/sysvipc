@@ -1,0 +1,124 @@
+#!/usr/bin/env ruby
+#
+#    $Source$
+#
+#    $Revision$
+#    $Date$
+#
+#    Copyright (c) 2006 James Steven Jenkins.
+#
+
+$:.unshift File.join(File.dirname(__FILE__), '../ext')
+$:.unshift File.join(File.dirname(__FILE__), '../lib')
+
+require 'SysVIPC'
+require 'test/unit'
+
+include SysVIPC
+
+MODE = 0660
+NSEMS = 16
+NSEMOPS = 5
+NMSGS = 16
+SEMVAL = 10
+SHMSIZE = 1024
+
+class TestSysVIPC < Test::Unit::TestCase
+
+  def setup
+    @msgs = []
+    @shms = []
+  end
+
+  def test_msg
+  end
+
+  def test_sem
+
+    # Create a semaphore set.
+
+    sem = Semaphore.new(IPC_CREAT, NSEMS, IPC_CREAT | MODE)
+    assert_not_nil(sem)
+
+    # Initalize semaphore set.
+
+    values = []
+    1.upto(NSEMS) { |i| values << 2 * i + 1}
+    sem.setall(values)
+
+    # Check initialized values.
+
+    assert_equal(values, sem.getall)
+
+    # Set a single semaphore value.
+
+    sem.setval(0, SEMVAL)
+
+    # Get single semaphore value.
+    
+    assert_equal(SEMVAL, sem.val(0))
+
+    # Increment two semaphores.
+
+    sembufs = Array.new(2) { Sembuf.new }
+    sembufs.each do |s|
+      s.sem_op = 1
+    end
+    sem.op(sembufs)
+
+    # Decrement two semaphores.
+
+    sembufs.each_index do |i|
+      sembufs[i].sem_num = i
+      sembufs[i].sem_op = -1
+    end
+    sem.op(sembufs)
+
+    # Check PID.
+
+    assert_equal(Process.pid, sem.getpid)
+    assert_equal(Process.pid, sem.pid)
+
+    # Get wait counts.
+
+    assert_equal(0, sem.ncnt)
+    assert_equal(0, sem.zcnt)
+
+    # Get Semid_ds.
+
+    semid_ds = sem.semid_ds
+    assert_instance_of(Semid_ds, semid_ds)
+
+    assert_equal(NSEMS, semid_ds.sem_nsems)
+
+    assert_equal(Process.uid, semid_ds.sem_perm.uid)
+    assert_equal(Process.gid, semid_ds.sem_perm.gid)
+    assert_equal(MODE, semid_ds.sem_perm.mode)
+
+    # Set Semid_ds.
+
+    sem.ipc_set(semid_ds)
+
+    # Check Semid_ds again.
+
+    semid_ds = sem.semid_ds
+
+    assert_equal(NSEMS, semid_ds.sem_nsems)
+
+    assert_equal(Process.uid, semid_ds.sem_perm.uid)
+    assert_equal(Process.gid, semid_ds.sem_perm.gid)
+    assert_equal(MODE, semid_ds.sem_perm.mode)
+
+    # Remove semaphore set.
+
+    sem.rm
+
+  end
+
+  def test_shm
+  end
+
+  def teardown
+  end
+
+end
