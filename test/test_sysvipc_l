@@ -10,8 +10,10 @@
 
 $:.unshift File.join(File.dirname(__FILE__), '../ext')
 
-require 'SysVIPC.so'
 require 'test/unit'
+require 'timeout'
+
+require 'SysVIPC.so'
 
 include SysVIPC
 
@@ -173,6 +175,21 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_not_equal(-1, status)
     t.join
     assert_equal('12345', seq)
+
+    # Test non-blocking acquire.
+
+    acquire.first.sem_flg = IPC_NOWAIT
+    status = semop(semid, acquire, NSEMOPS)
+    assert_not_equal(-1, status)
+    assert_nothing_raised do
+      Timeout::timeout(1) do
+	status = semop(semid, acquire, NSEMOPS)
+	assert_equal(-1, status)
+	assert_equal(Errno::EAGAIN::Errno, SysVIPC.errno)
+      end
+    end
+    status = semop(semid, release, NSEMOPS)
+    assert_not_equal(-1, status)
 
     # Remove semaphore set.
 

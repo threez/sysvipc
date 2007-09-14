@@ -11,8 +11,10 @@
 $:.unshift File.join(File.dirname(__FILE__), '../ext')
 $:.unshift File.join(File.dirname(__FILE__), '../lib')
 
-require 'SysVIPC'
 require 'test/unit'
+require 'timeout'
+
+require 'SysVIPC'
 
 include SysVIPC
 
@@ -169,6 +171,15 @@ class TestSysVIPC < Test::Unit::TestCase
     sem.op(release)
     t.join
     assert_equal('12345', seq)
+
+    # Test non-blocking acquire.
+
+    acquire.first.sem_flg = IPC_NOWAIT
+    sem.op(acquire)
+    Timeout::timeout(1) do
+      assert_raise(Errno::EAGAIN) { sem.op(acquire) }
+    end
+    sem.op(release)
 
     # Remove semaphore set.
 
