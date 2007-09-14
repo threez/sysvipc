@@ -36,6 +36,31 @@ class TestSysVIPC < Test::Unit::TestCase
     msgid = msgget(IPC_PRIVATE, IPC_CREAT | MODE)
     assert_not_equal(-1, msgid)
 
+    # Get Msqid_ds
+
+    msqid_ds = Msqid_ds.new
+    assert_not_equal(-1, msgctl(msgid, IPC_STAT, msqid_ds))
+    assert_instance_of(Msqid_ds, msqid_ds)
+
+    assert_equal(Process.uid, msqid_ds.msg_perm.uid)
+    assert_equal(Process.gid, msqid_ds.msg_perm.gid)
+    assert_equal(MODE, msqid_ds.msg_perm.mode)
+
+    assert_equal(0, msqid_ds.msg_qnum)
+    assert_operator(0, :<, msqid_ds.msg_qbytes)
+
+    # Set Msqid_ds.
+
+    assert_not_equal(-1, msgctl(msgid, IPC_SET, msqid_ds))
+
+    # Check Msqid_ds again.
+
+    assert_not_equal(-1, msgctl(msgid, IPC_STAT, msqid_ds))
+
+    assert_equal(Process.uid, msqid_ds.msg_perm.uid)
+    assert_equal(Process.gid, msqid_ds.msg_perm.gid)
+    assert_equal(MODE, msqid_ds.msg_perm.mode)
+
     # Remove message queue.
 
     assert_not_equal(-1, msgctl(msgid, IPC_RMID))
@@ -86,6 +111,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     semun.buf = Semid_ds.new
     assert_not_equal(-1, semctl(semid, 0, IPC_STAT, semun))
+    assert_instance_of(Semid_ds, semun.buf)
 
     assert_equal(NSEMS, semun.buf.sem_nsems)
 

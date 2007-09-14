@@ -17,6 +17,28 @@ module SysVIPC
       check_result(@msgid)
     end
 
+    public
+
+    def ipc_stat
+      msqid_ds = Msqid_ds.new
+      check_result(msgctl(@msgid, IPC_STAT, msqid_ds))
+      msqid_ds
+    end
+    alias :msqid_ds :ipc_stat
+
+    def ipc_set(msqid_ds)
+      unless Msqid_ds === msqid_ds
+	raise ArgumentError,
+	  "argument to ipc_set must be a Msqid_ds"
+      end
+      check_result(msgctl(@msgid, IPC_SET, msqid_ds))
+    end
+
+    def ipc_rmid
+      check_result(msgctl(@msgid, IPC_RMID))
+    end
+    alias :rm :ipc_rmid
+
   end
 
   class Semaphore
