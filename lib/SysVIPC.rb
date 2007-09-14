@@ -6,11 +6,19 @@ module SysVIPC
 
   class Semaphore
 
+    private
+
     def initialize(key, nsems, flags)
       @nsems = nsems
       @semid = semget(key, nsems, flags)
-      raise SystemCallError.new(SysVIPC.errno) if @semid == -1
+      check_result(@semid)
     end
+
+    def check_result(res)
+      raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
+    end
+
+    public
 
     def setall(values)
       if values.length > @nsems
@@ -19,23 +27,20 @@ module SysVIPC
       end
       su = Semun.new
       su.array = values
-      status = semctl(@semid, 0, SETALL, su)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, 0, SETALL, su))
     end
 
     def getall
       su = Semun.new
       su.array = Array.new(@nsems, 0)
-      status = semctl(@semid, 0, GETALL, su)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, 0, GETALL, su))
       su.array
     end
 
     def setval(semnum, val)
       su = Semun.new
       su.val = SEMVAL
-      status = semctl(@semid, semnum, SETVAL, su)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, semnum, SETVAL, su))
     end
 
     def getval(semnum)
@@ -61,8 +66,7 @@ module SysVIPC
     def ipc_stat
       su = Semun.new
       su.buf = Semid_ds.new
-      status = semctl(@semid, 0, IPC_STAT, su)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, 0, IPC_STAT, su))
       su.buf
     end
     alias :semid_ds :ipc_stat
@@ -74,19 +78,16 @@ module SysVIPC
       end
       su = Semun.new
       su.buf = semid_ds
-      status = semctl(@semid, 0, IPC_SET, su)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, 0, IPC_SET, su))
     end
 
     def ipc_rmid
-      status = semctl(@semid, 0, IPC_RMID)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semctl(@semid, 0, IPC_RMID))
     end
     alias :rm :ipc_rmid
 
     def op(array)
-      status = semop(@semid, array, array.length)
-      raise SystemCallError.new(SysVIPC.errno) if status == -1
+      check_result(semop(@semid, array, array.length))
     end
 
   end
