@@ -34,7 +34,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Create a message queue.
 
-    msg = MessageQueue.new(IPC_CREAT, IPC_CREAT | MODE)
+    msg = MessageQueue.new(IPC_PRIVATE, IPC_CREAT | MODE)
     assert_not_nil(msg)
 
     # Get Msqid_ds.
@@ -69,14 +69,14 @@ class TestSysVIPC < Test::Unit::TestCase
 	mtype = i + 1
 	mtext = "message #{i}"
 	mflags = 0
-	assert_not_equal(-1, msg.snd(mtype, mtext, mflags))
+	assert_not_equal(-1, msg.send(mtype, mtext, mflags))
       end
     end
     NMSGS.times do |i|
       mtype = i + 1
       msize = 100
       mflags = 0
-      assert_equal("message #{i}", msg.rcv(mtype, msize, mflags))
+      assert_equal("message #{i}", msg.receive(mtype, msize, mflags))
     end
     Process.wait
 
@@ -90,7 +90,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Create a semaphore set.
 
-    sem = Semaphore.new(IPC_CREAT, NSEMS, IPC_CREAT | MODE)
+    sem = Semaphore.new(IPC_PRIVATE, NSEMS, IPC_CREAT | MODE)
     assert_not_nil(sem)
 
     # Initalize semaphore set.

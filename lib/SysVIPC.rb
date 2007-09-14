@@ -39,6 +39,23 @@ module SysVIPC
     end
     alias :rm :ipc_rmid
 
+    def snd(type, text, flags = 0)
+      msgbuf = Msgbuf.new
+      msgbuf.mtype = type
+      msgbuf.mtext = text
+      check_result(msgsnd(@msgid, msgbuf, text.length, flags))
+    end
+    alias :send :snd
+
+    def rcv(type, size, flags = 0)
+      msgbuf = Msgbuf.new
+      msgbuf.mtype = type
+      msgbuf.mtext = ' ' * size
+      check_result(msgrcv(@msgid, msgbuf, size, type, flags))
+      msgbuf.mtext
+    end
+    alias :receive :rcv
+
   end
 
   class Semaphore
