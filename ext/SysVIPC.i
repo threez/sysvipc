@@ -92,7 +92,7 @@ struct msgbuf {
 
 struct Msgbuf {
     long int        mtype;
-    char *          mtext;
+    VALUE          mtext;
 };
 
 #ifndef HAVE_TYPE_UNION_SEMUN
@@ -217,7 +217,7 @@ struct msqid_ds {
 
 struct Msgbuf {
     long int        mtype;
-    char *          mtext;
+    VALUE          mtext;
 };
 
 /* functions */
@@ -248,8 +248,7 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
 
     if ((len = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg)) != -1) {
         msgp->mtype = bufp->mtype;
-        memcpy(msgp->mtext, bufp->mtext, len);
-        msgp->mtext[len] = '\0';
+        msgp->mtext = rb_str_new(bufp->mtext, len);
     }
     return LONG2NUM(len);
 }
@@ -260,14 +259,19 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
 static VALUE
 inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
 {
-    int len;
+    int len, slen;
     struct msgbuf *bufp;
+    VALUE sval;
+
+    sval = StringValue(msgp->mtext);
+    slen = RSTRING_LEN(sval);
 
     len = sizeof (long) + msgsz;
     bufp = (struct msgbuf *) ALLOCA_N(char, len);
 
     bufp->mtype = msgp->mtype;
-    memcpy(bufp->mtext, msgp->mtext, msgsz);
+    if (slen < msgsz) msgsz = slen;
+    memcpy(bufp->mtext, RSTRING_PTR(msgp->mtext), msgsz);
     return INT2FIX(msgsnd(msqid, bufp, msgsz, msgflg));
 }
 %}

@@ -61,6 +61,25 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_equal(Process.gid, msqid_ds.msg_perm.gid)
     assert_equal(MODE, msqid_ds.msg_perm.mode)
 
+    # Test send/receive.
+
+    Process.fork do
+      sleep 1
+      NMSGS.times do |i|
+	mtype = i + 1
+	mtext = "message #{i}"
+	mflags = 0
+	assert_not_equal(-1, msg.snd(mtype, mtext, mflags))
+      end
+    end
+    NMSGS.times do |i|
+      mtype = i + 1
+      msize = 100
+      mflags = 0
+      assert_equal("message #{i}", msg.rcv(mtype, msize, mflags))
+    end
+    Process.wait
+
     # Remove message queue.
 
     msg.rm
