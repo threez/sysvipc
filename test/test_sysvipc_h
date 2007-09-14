@@ -111,22 +111,6 @@ class TestSysVIPC < Test::Unit::TestCase
     
     assert_equal(SEMVAL, sem.val(0))
 
-    # Increment two semaphores.
-
-    sembufs = Array.new(2) { Sembuf.new }
-    sembufs.each do |s|
-      s.sem_op = 1
-    end
-    sem.op(sembufs)
-
-    # Decrement two semaphores.
-
-    sembufs.each_index do |i|
-      sembufs[i].sem_num = i
-      sembufs[i].sem_op = -1
-    end
-    sem.op(sembufs)
-
     # Check PID.
 
     assert_equal(Process.pid, sem.getpid)
