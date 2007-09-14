@@ -56,21 +56,18 @@ class TestSysVIPC < Test::Unit::TestCase
     semun = Semun.new
     semun.array = values
     assert_equal(values, semun.array)
-    status = semctl(semid, 0, SETALL, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, SETALL, semun))
     assert_equal(values, semun.array)
 
     # Check initialized values.
 
-    status = semctl(semid, 0, GETALL, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, GETALL, semun))
     assert_equal(values, semun.array)
 
     # Set a single semaphore value.
 
     semun.val = SEMVAL
-    status = semctl(semid, 0, SETVAL, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, SETVAL, semun))
 
     # Get single semaphore value.
     
@@ -88,8 +85,7 @@ class TestSysVIPC < Test::Unit::TestCase
     # Get Semid_ds.
 
     semun.buf = Semid_ds.new
-    status = semctl(semid, 0, IPC_STAT, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, IPC_STAT, semun))
 
     assert_equal(NSEMS, semun.buf.sem_nsems)
 
@@ -99,13 +95,11 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Set Semid_ds.
 
-    status = semctl(semid, 0, IPC_SET, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, IPC_SET, semun))
 
     # Check Semid_ds again.
 
-    status = semctl(semid, 0, IPC_STAT, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, IPC_STAT, semun))
 
     assert_equal(NSEMS, semun.buf.sem_nsems)
 
@@ -134,30 +128,25 @@ class TestSysVIPC < Test::Unit::TestCase
     # Initialize semaphores for acquire/release test.
 
     semun.array = Array.new(NSEMS, 1)
-    status = semctl(semid, 0, SETALL, semun)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, SETALL, semun))
 
     # Test acquire/release with processes.
 
     rd, wr = IO.pipe
     wr.write '1'
-    status = semop(semid, acquire, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, acquire, NSEMOPS))
     Process.fork do
       rd.close
       wr.write '2'
-      status = semop(semid, acquire, NSEMOPS)
-      assert_not_equal(-1, status)
+      assert_not_equal(-1, semop(semid, acquire, NSEMOPS))
       wr.write '4'
-      status = semop(semid, release, NSEMOPS)
-      assert_not_equal(-1, status)
+      assert_not_equal(-1, semop(semid, release, NSEMOPS))
       wr.write '5'
       wr.close
     end
     sleep 1
     wr.write '3'
-    status = semop(semid, release, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, release, NSEMOPS))
     wr.close
     Process.wait
     assert_equal('12345', rd.read)
@@ -166,43 +155,35 @@ class TestSysVIPC < Test::Unit::TestCase
     # Test acquire/release with threads.
 
     seq = '1'
-    status = semop(semid, acquire, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, acquire, NSEMOPS))
     t = Thread.new do
       seq << '2'
-      status = semop(semid, acquire, NSEMOPS)
-      assert_not_equal(-1, status)
+      assert_not_equal(-1, semop(semid, acquire, NSEMOPS))
       seq << '4'
-      status = semop(semid, release, NSEMOPS)
-      assert_not_equal(-1, status)
+      assert_not_equal(-1, semop(semid, release, NSEMOPS))
       seq << '5'
     end
     sleep 1
     seq << '3'
-    status = semop(semid, release, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, release, NSEMOPS))
     t.join
     assert_equal('12345', seq)
 
     # Test non-blocking acquire.
 
     acquire.first.sem_flg = IPC_NOWAIT
-    status = semop(semid, acquire, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, acquire, NSEMOPS))
     assert_nothing_raised do
       Timeout::timeout(1) do
-	status = semop(semid, acquire, NSEMOPS)
-	assert_equal(-1, status)
+	assert_equal(-1, semop(semid, acquire, NSEMOPS))
 	assert_equal(Errno::EAGAIN::Errno, SysVIPC.errno)
       end
     end
-    status = semop(semid, release, NSEMOPS)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semop(semid, release, NSEMOPS))
 
     # Remove semaphore set.
 
-    status = semctl(semid, 0, IPC_RMID)
-    assert_not_equal(-1, status)
+    assert_not_equal(-1, semctl(semid, 0, IPC_RMID))
 
   end
 
