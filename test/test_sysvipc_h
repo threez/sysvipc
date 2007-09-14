@@ -109,6 +109,67 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_equal(Process.gid, semid_ds.sem_perm.gid)
     assert_equal(MODE, semid_ds.sem_perm.mode)
 
+    # Build acquire/release operation arrays.
+
+    acquire = []
+    release = []
+    NSEMOPS.times do |i|
+      asb = Sembuf.new
+      asb.sem_num = i
+      asb.sem_op = -1
+      asb.sem_flg = 0
+      acquire << asb
+
+      rsb = Sembuf.new
+      rsb.sem_num = i
+      rsb.sem_op = 1
+      rsb.sem_flg = 0
+      release << rsb
+    end
+
+    # Initialize semaphores for acquire/release test.
+
+    sem.setall(Array.new(NSEMS, 1))
+
+    # Test acquire/release with processes.
+
+    rd, wr = IO.pipe
+    wr.write '1'
+    sem.op(acquire)
+    Process.fork do
+      rd.close
+      wr.write '2'
+      sem.op(acquire)
+      wr.write '4'
+      sem.op(release)
+      wr.write '5'
+      wr.close
+    end
+    sleep 1
+    wr.write '3'
+    sem.op(release)
+    wr.close
+    Process.wait
+    assert_equal('12345', rd.read)
+    rd.close
+
+    # Test acquire/release with threads.
+
+    seq = '1'
+    sem.op(acquire)
+    t = Thread.new do
+      seq << '2'
+      sem.op(acquire)
+      seq << '4'
+      sem.op(release)
+      seq << '5'
+    end
+    sleep 1
+    seq << '3'
+    sem.op(release)
+    t.join
+    assert_equal('12345', seq)
+
     # Remove semaphore set.
 
     sem.rm

@@ -119,16 +119,13 @@ class TestSysVIPC < Test::Unit::TestCase
       rsb.sem_op = 1
       rsb.sem_flg = 0
       release << rsb
-
     end
 
     # Initialize semaphores for acquire/release test.
 
-    NSEMOPS.times do |i|
-      semun.val = 1
-      status = semctl(semid, i, SETVAL, semun)
-      assert_not_equal(-1, status)
-    end
+    semun.array = Array.new(NSEMS, 1)
+    status = semctl(semid, 0, SETALL, semun)
+    assert_not_equal(-1, status)
 
     # Test acquire/release with processes.
 
