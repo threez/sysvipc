@@ -83,7 +83,19 @@
 #define EWOULDBLOCK EAGAIN
 #endif
 
-#ifndef HAVE_UNION_SEMUN
+#ifndef HAVE_TYPE_STRUCT_MSGBUF
+struct msgbuf {
+    long mtype;
+    char mtext[1];
+};
+#endif
+
+struct Msgbuf {
+    long int        mtype;
+    char *          mtext;
+};
+
+#ifndef HAVE_TYPE_UNION_SEMUN
 union semun {
     int              val;
     struct semid_ds *buf;
@@ -203,6 +215,11 @@ struct msqid_ds {
     time_t          msg_ctime;
 };
 
+struct Msgbuf {
+    long int        mtype;
+    char *          mtext;
+};
+
 /* functions */
 
 %typemap(default) struct msqid_ds * {
@@ -211,8 +228,49 @@ struct msqid_ds {
 
 int       msgctl(int, int, struct msqid_ds *);
 int       msgget(key_t, int);
-ssize_t   msgrcv(int, void *, size_t, long int, int);
-int       msgsnd(int, const void *, size_t, int);
+
+%typemap(default) struct Msqbuf {
+    $1 = (struct Msgbuf *) ALLOC_N(struct Msgbuf, 1);
+    $1->mtext = (char *) ALLOC_N(char, 1);
+}
+
+%rename(msgrcv) inner_msgrcv;
+%inline %{
+static VALUE
+inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
+    long msgtyp, int msgflg)
+{
+    int len;
+    struct msgbuf *bufp;
+
+    len = sizeof (long) + msgsz;
+    bufp = (struct msgbuf *) ALLOCA_N(char, len);
+
+    if ((len = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg)) != -1) {
+        msgp->mtype = bufp->mtype;
+        memcpy(msgp->mtext, bufp->mtext, len);
+        msgp->mtext[len] = '\0';
+    }
+    return LONG2NUM(len);
+}
+%}
+
+%rename(msgsnd) inner_msgsnd;
+%inline %{
+static VALUE
+inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
+{
+    int len;
+    struct msgbuf *bufp;
+
+    len = sizeof (long) + msgsz;
+    bufp = (struct msgbuf *) ALLOCA_N(char, len);
+
+    bufp->mtype = msgp->mtype;
+    memcpy(bufp->mtext, msgp->mtext, msgsz);
+    return INT2FIX(msgsnd(msqid, bufp, msgsz, msgflg));
+}
+%}
 
 /*
  * sys/sem.h
