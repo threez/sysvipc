@@ -28,11 +28,15 @@ SHMSIZE = 1024
 class TestSysVIPC < Test::Unit::TestCase
 
   def setup
-    @msgs = []
-    @shms = []
   end
 
   def test_msg
+
+    # Create a message queue.
+
+    msq = MessageQueue.new(IPC_CREAT, IPC_CREAT | MODE)
+    assert_not_nil(msq)
+
   end
 
   def test_sem

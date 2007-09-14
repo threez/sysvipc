@@ -27,11 +27,19 @@ SHMSIZE = 1024
 class TestSysVIPC < Test::Unit::TestCase
 
   def setup
-    @msgs = []
-    @shms = []
   end
 
   def test_msg
+
+    # Create a message queue.
+
+    msgid = msgget(IPC_PRIVATE, IPC_CREAT | MODE)
+    assert_not_equal(-1, msgid)
+
+    # Remove message queue.
+
+    assert_not_equal(-1, msgctl(msgid, IPC_RMID))
+
   end
 
   def test_sem

@@ -205,6 +205,10 @@ struct msqid_ds {
 
 /* functions */
 
+%typemap(default) struct msqid_ds * {
+    $1 = (struct msqid_ds *) ALLOC_N(struct msqid_ds, 1);
+}
+
 int       msgctl(int, int, struct msqid_ds *);
 int       msgget(key_t, int);
 ssize_t   msgrcv(int, void *, size_t, long int, int);

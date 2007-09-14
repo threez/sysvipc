@@ -4,6 +4,21 @@ module SysVIPC
 
   RELEASE = '0.9.1-rc1'
 
+  def check_result(res)
+    raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
+  end
+
+  class MessageQueue
+
+    private
+
+    def initialize(key, flags)
+      @msgid = msgget(key, flags)
+      check_result(@msgid)
+    end
+
+  end
+
   class Semaphore
 
     private
@@ -12,10 +27,6 @@ module SysVIPC
       @nsems = nsems
       @semid = semget(key, nsems, flags)
       check_result(@semid)
-    end
-
-    def check_result(res)
-      raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
     end
 
     public
