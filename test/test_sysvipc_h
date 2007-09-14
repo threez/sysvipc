@@ -68,17 +68,23 @@ class TestSysVIPC < Test::Unit::TestCase
       NMSGS.times do |i|
 	mtype = i + 1
 	mtext = "message #{i}"
-	mflags = 0
-	assert_not_equal(-1, msg.send(mtype, mtext, mflags))
+	assert_not_equal(-1, msg.send(mtype, mtext))
       end
     end
     NMSGS.times do |i|
       mtype = i + 1
       msize = 100
-      mflags = 0
-      assert_equal("message #{i}", msg.receive(mtype, msize, mflags))
+      assert_equal("message #{i}", msg.receive(mtype, msize))
     end
     Process.wait
+
+    # Read a truncated message.
+
+    assert_not_equal(-1, msg.send(1, 'a few bytes'))
+    assert_raise(Errno::E2BIG) do
+      t = msg.receive(1, 1)
+    end
+    assert_equal('a', msg.receive(1, 1, MSG_NOERROR))
 
     # Remove message queue.
 

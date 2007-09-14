@@ -82,6 +82,18 @@ class TestSysVIPC < Test::Unit::TestCase
     end
     Process.wait
 
+    # Read a truncated message.
+
+    msgbuf = Msgbuf.new
+    msgbuf.mtype = 1
+    msgbuf.mtext = 'a few bytes'
+    len = msgbuf.mtext.length
+    assert_not_equal(-1, msgsnd(msgid, msgbuf, len, 0))
+    assert_equal(-1, msgrcv(msgid, msgbuf, 1, 1, 0))
+    assert_equal(Errno::E2BIG::Errno, SysVIPC.errno)
+    assert_not_equal(-1, msgrcv(msgid, msgbuf, 1, 1, MSG_NOERROR))
+    assert_equal('a', msgbuf.mtext)
+
     # Remove message queue.
 
     assert_not_equal(-1, msgctl(msgid, IPC_RMID))
