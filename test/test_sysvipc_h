@@ -61,7 +61,7 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_equal(Process.gid, msqid_ds.msg_perm.gid)
     assert_equal(MODE, msqid_ds.msg_perm.mode)
 
-    # Test send/receive.
+    # Test send/receive with processes.
 
     Process.fork do
       sleep 1
@@ -77,6 +77,23 @@ class TestSysVIPC < Test::Unit::TestCase
       assert_equal("message #{i}", msg.receive(mtype, msize))
     end
     Process.wait
+
+    # Test send/receive with threads.
+
+    t = Thread.new do
+      sleep 1
+      NMSGS.times do |i|
+	mtype = i + 1
+	mtext = "message #{i}"
+	assert_not_equal(-1, msg.send(mtype, mtext))
+      end
+    end
+    NMSGS.times do |i|
+      mtype = i + 1
+      msize = 100
+      assert_equal("message #{i}", msg.receive(mtype, msize))
+    end
+    t.join
 
     # Read from an empty queue.
 
