@@ -106,7 +106,7 @@ union semun {
 struct Semun {
     int              val;
     struct semid_ds *buf;
-    unsigned short  *array;
+    VALUE            array;
 };
 
 %}
@@ -309,130 +309,17 @@ struct sembuf {
     short int          sem_flg;
 };
 
-/*
- * The following is necessary to deal with the array member of union
- * semun. The wrapper code can't tell if it's safe to free the memory
- * pointed to by array because some other member may have been written
- * last. To work around that, we define a struct Semun with the same
- * members, ensure that the array member is always initialized and
- * freed as required, and insert a shim before calling semctl() that
- * builds a local union semun by copying the proper element from
- * struct Semun.
- */
-
-/*
- * Typemaps for converting Ruby arrays to and from unsigned short [].
- */
-
-%typemap(in) unsigned short [ANY] {
-  unsigned short *ap;
-  int i, len;
-
-  Check_Type($input, T_ARRAY);
-  len = RARRAY($input)->len;
-  $1 = ap = ALLOC_N(unsigned short, len);
-  *(ap++) = len;
-  for (i = 0; i < len; i++) {
-    *(ap++) = NUM2INT(rb_ary_entry($input, i));
-  }
-}
-
-%typemap(out) unsigned short [ANY] {
-  int i, len;
-
-  len = *($1++);
-  $result = rb_ary_new2(len);
-  for (i = 0; i < len; i++) {
-    rb_ary_store($result, i, INT2FIX(*($1++)));
-  }
-}
-
-/*
- * Typemap to free memory pointed to by array member before assigning
- * to it.
- */
-
-%typemap(memberin) unsigned short [ANY] {
-  free($1);
-  $1 = $input;
-}
-
-/*
- * Constructor and destructor for struct Semun. Copied from the
- * default SWIG code and adapted to initialize and free the array
- * member.
- */
-
-%{
-#ifdef HAVE_RB_DEFINE_ALLOC_FUNC
-static VALUE
-_wrap_Semun_allocate(VALUE self) {
-#else
-  static VALUE
-  _wrap_Semun_allocate(int argc, VALUE *argv, VALUE self) {
-#endif
-    
-    
-    VALUE vresult = SWIG_NewClassInstance(self, SWIGTYPE_p_Semun);
-#ifndef HAVE_RB_DEFINE_ALLOC_FUNC
-    rb_obj_call_init(vresult, argc, argv);
-#endif
-    return vresult;
-  }
-  
-static VALUE
-_wrap_new_Semun(int argc, VALUE *argv, VALUE self) {
-  struct Semun *result = 0 ;
-  
-  if ((argc < 0) || (argc > 0)) {
-    rb_raise(rb_eArgError, "wrong # of arguments(%d for 0)",argc); SWIG_fail;
-  }
-  result = (struct Semun *)(struct Semun *) calloc(1, sizeof(struct Semun));DATA_PTR(self) = result;
-  result->array = (unsigned short *) calloc(1, sizeof(unsigned short));
-  
-  return self;
-fail:
-  return Qnil;
-}
-
-static void
-free_Semun(struct Semun *arg1) {
-    free((char *) arg1->array);
-    free((char *) arg1);
-}
-%}
-
-/*
- * Tell SWIG not to generate default constructor and destructor for
- * struct Semun.
- */
-
-%nodefaultctor Semun;
-%nodefaultdtor Semun;
-
 struct Semun {
     int              val;
     struct semid_ds *buf;
-    unsigned short  array[];
+    VALUE  array;
 };
-
-/*
- * Install our constructor and destructor.
- */
-
-%init %{
-  rb_define_method(cSemun.klass, "initialize", _wrap_new_Semun, -1);
-  rb_define_alloc_func(cSemun.klass, _wrap_Semun_allocate);
-%}
 
 /*
  * Typemap to allow semctl() to take an optional final argument.
  */
 
-%typemap(default) struct Semun {
-    $1.val = 0;
-    $1.buf = NULL;
-    $1.array = (unsigned short *) calloc(1, sizeof(unsigned short));
+%typemap(default) struct Semun * {
 }
 
 /* functions */
@@ -443,24 +330,55 @@ struct Semun {
 
 %rename(semctl) inner_semctl;
 %inline %{
-static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun arg)
+static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
 {
-    union semun us;
+    int i, len, nsems, ret;
+    unsigned short *ap;
+    union semun us, tus;
+    VALUE array;
+    struct semid_ds semid_ds;
 
     switch (cmd) {
     case SETVAL:
-        us.val = arg.val;
+        us.val = arg->val;
         break;
-    case SETALL:
     case GETALL:
-        us.array = arg.array + 1;
+    case SETALL:
+
+        /* allocate us.array */
+
+        tus.buf = &semid_ds;
+        ret = semctl(semid, 0, IPC_STAT, tus);
+        if (ret == -1) return INT2FIX(ret);
+        len = tus.buf->sem_nsems;
+        us.array = ap = ALLOCA_N(unsigned short, len);
+
+        switch (cmd) {
+        case SETALL:
+            array = arg->array;
+            Check_Type(array, T_ARRAY);
+            if (RARRAY(array)->len < len) len = RARRAY(array)->len;
+            for (i = 0; i < len; i++) {
+                *(ap++) = NUM2INT(rb_ary_entry(array, i));
+            }
+            break;
+        }
         break;
     case IPC_STAT:
     case IPC_SET:
-        us.buf = arg.buf;
+        us.buf = arg->buf;
         break;
     }
-    return INT2FIX(semctl(semid, semnum, cmd, us));
+    ret = semctl(semid, semnum, cmd, us);
+    switch (cmd) {
+    case GETALL:
+        arg->array = rb_ary_new2(len);
+        for (i = 0, ap = us.array; i < len; i++) {
+            rb_ary_store(arg->array, i, INT2NUM(*ap++));
+        }
+        break;
+    }
+    return INT2FIX(ret);
 }
 %}
 
