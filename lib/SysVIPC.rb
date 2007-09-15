@@ -153,6 +153,13 @@ module SysVIPC
 
     public
 
+    def ipc_stat
+      shmid_ds = Shmid_ds.new
+      check_result(shmctl(@shmid, IPC_STAT, shmid_ds))
+      shmid_ds
+    end
+    alias :shmid_ds :ipc_stat
+
     def ipc_rmid
       check_result(shmctl(@shmid, IPC_RMID, nil))
     end

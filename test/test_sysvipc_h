@@ -260,7 +260,16 @@ class TestSysVIPC < Test::Unit::TestCase
     shm = SharedMemory.new(IPC_PRIVATE, SHMSIZE, IPC_CREAT | MODE)
     assert_not_nil(shm)
 
-    # Removed shared memory segment.
+    # Get Shmid_ds.
+
+    shmid_ds = shm.shmid_ds
+    assert_instance_of(Shmid_ds, shmid_ds)
+
+    assert_equal(Process.uid, shmid_ds.shm_perm.uid)
+    assert_equal(Process.gid, shmid_ds.shm_perm.gid)
+    assert_equal(MODE, shmid_ds.shm_perm.mode)
+
+    # Remove shared memory segment.
 
     shm.rm
 

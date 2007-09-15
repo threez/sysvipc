@@ -478,7 +478,7 @@ static VALUE inner_semop(int semid, struct sembuf sops[], size_t nsops)
 
 /* typedefs */
 
-typedef unsigned int shmatt_t;
+typedef unsigned shmatt_t;
 
 /* constants */
 
