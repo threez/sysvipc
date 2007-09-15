@@ -482,9 +482,11 @@ typedef unsigned int shmatt_t;
 
 /* constants */
 
-const int SHM_RDONLY;
-const int SHMLBA;
-const int SHM_RND;
+%init %{
+    def_const(SHM_RDONLY);
+    def_const(SHMLBA);
+    def_const(SHM_RND);
+%}
 
 /* structs */
 
