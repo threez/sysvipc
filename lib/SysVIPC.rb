@@ -35,7 +35,7 @@ module SysVIPC
     end
 
     def ipc_rmid
-      check_result(msgctl(@msgid, IPC_RMID))
+      check_result(msgctl(@msgid, IPC_RMID, nil))
     end
     alias :rm :ipc_rmid
 

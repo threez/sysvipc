@@ -124,7 +124,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Remove message queue.
 
-    assert_not_equal(-1, msgctl(msgid, IPC_RMID))
+    assert_not_equal(-1, msgctl(msgid, IPC_RMID, nil))
 
   end
 

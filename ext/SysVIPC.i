@@ -222,17 +222,8 @@ struct Msgbuf {
 
 /* functions */
 
-%typemap(default) struct msqid_ds * {
-    $1 = (struct msqid_ds *) ALLOC_N(struct msqid_ds, 1);
-}
-
 int       msgctl(int, int, struct msqid_ds *);
 int       msgget(key_t, int);
-
-%typemap(default) struct Msqbuf {
-    $1 = (struct Msgbuf *) ALLOC_N(struct Msgbuf, 1);
-    $1->mtext = (char *) ALLOC_N(char, 1);
-}
 
 %rename(msgrcv) inner_msgrcv;
 %inline %{
