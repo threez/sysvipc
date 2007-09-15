@@ -142,5 +142,23 @@ module SysVIPC
 
   end
 
+  class SharedMemory
+    
+    private
+
+    def initialize(key, size, flags)
+      @shmid = shmget(key, size, flags)
+      check_result(@shmid)
+    end
+
+    public
+
+    def ipc_rmid
+      check_result(shmctl(@shmid, IPC_RMID, nil))
+    end
+    alias :rm :ipc_rmid
+
+  end
+
 end
 

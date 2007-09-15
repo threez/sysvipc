@@ -276,6 +276,16 @@ class TestSysVIPC < Test::Unit::TestCase
   end
 
   def test_shm
+
+    # Create a shared memory segment.
+
+    shmid = shmget(IPC_PRIVATE, SHMSIZE, IPC_CREAT | MODE)
+    assert_not_equal(-1, shmid)
+
+    # Removed shared memory segment.
+
+    assert_not_equal(-1, shmctl(shmid, IPC_RMID, nil))
+
   end
 
   def teardown

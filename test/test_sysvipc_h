@@ -254,6 +254,16 @@ class TestSysVIPC < Test::Unit::TestCase
   end
 
   def test_shm
+
+    # Create a shared memory segment.
+
+    shm = SharedMemory.new(IPC_PRIVATE, SHMSIZE, IPC_CREAT | MODE)
+    assert_not_nil(shm)
+
+    # Removed shared memory segment.
+
+    shm.rm
+
   end
 
   def teardown
