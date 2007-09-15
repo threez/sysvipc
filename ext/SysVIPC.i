@@ -139,7 +139,7 @@ typedef unsigned key_t;
 typedef unsigned mode_t;
 typedef int      pid_t;
 typedef unsigned size_t;
-typedef in       ssize_t;
+typedef int      ssize_t;
 typedef unsigned time_t;
 typedef unsigned uid_t;
 
