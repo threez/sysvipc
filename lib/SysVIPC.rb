@@ -160,6 +160,14 @@ module SysVIPC
     end
     alias :shmid_ds :ipc_stat
 
+    def ipc_set(shmid_ds)
+      unless Shmid_ds === shmid_ds
+	raise ArgumentError,
+	  "argument to ipc_set must be a Shmid_ds"
+      end
+      check_result(shmctl(@shmid, IPC_SET, shmid_ds))
+    end
+
     def ipc_rmid
       check_result(shmctl(@shmid, IPC_RMID, nil))
     end

@@ -292,6 +292,18 @@ class TestSysVIPC < Test::Unit::TestCase
     assert_equal(Process.gid, shmid_ds.shm_perm.gid)
     assert_equal(MODE, shmid_ds.shm_perm.mode)
 
+    # Set Shmid_ds.
+
+    assert_not_equal(-1, shmctl(shmid, IPC_SET, shmid_ds))
+
+    # Check Shmid_ds again.
+
+    assert_not_equal(-1, shmctl(shmid, IPC_STAT, shmid_ds))
+
+    assert_equal(Process.uid, shmid_ds.shm_perm.uid)
+    assert_equal(Process.gid, shmid_ds.shm_perm.gid)
+    assert_equal(MODE, shmid_ds.shm_perm.mode)
+
     # Remove shared memory segment.
 
     assert_not_equal(-1, shmctl(shmid, IPC_RMID, nil))
