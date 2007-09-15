@@ -240,17 +240,38 @@ static VALUE
 inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
     long msgtyp, int msgflg)
 {
-    int len;
+    int len, nowait = 0, ret;
     struct msgbuf *bufp;
 
     len = sizeof (long) + msgsz;
     bufp = (struct msgbuf *) ALLOCA_N(char, len);
 
-    if ((len = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg)) != -1) {
+    nowait = msgflg & IPC_NOWAIT;
+    if (!rb_thread_alone()) msgflg |= IPC_NOWAIT;
+
+    retry:
+    TRAP_BEG;
+    ret = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg);
+    TRAP_END;
+    if (ret == -1) {
+        switch (errno) {
+        case EINTR:
+            goto retry;
+        case ENOMSG:
+        case EWOULDBLOCK:
+#if EAGAIN != EWOULDBLOCK
+        case EAGAIN:
+#endif
+            if (!nowait) {
+                rb_thread_polling ();
+                goto retry;
+            }
+        }
+    } else {
         msgp->mtype = bufp->mtype;
-        msgp->mtext = rb_str_new(bufp->mtext, len);
+        msgp->mtext = rb_str_new(bufp->mtext, ret);
     }
-    return LONG2NUM(len);
+    return LONG2NUM(ret);
 }
 %}
 
@@ -259,7 +280,7 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
 static VALUE
 inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
 {
-    int len, slen;
+    int len, slen, nowait = 0, ret;
     struct msgbuf *bufp;
     VALUE sval;
 
@@ -272,7 +293,30 @@ inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
     bufp->mtype = msgp->mtype;
     if (slen < msgsz) msgsz = slen;
     memcpy(bufp->mtext, RSTRING_PTR(msgp->mtext), msgsz);
-    return INT2FIX(msgsnd(msqid, bufp, msgsz, msgflg));
+
+    nowait = msgflg & IPC_NOWAIT;
+    if (!rb_thread_alone()) msgflg |= IPC_NOWAIT;
+
+    retry:
+    TRAP_BEG;
+    ret = msgsnd(msqid, bufp, msgsz, msgflg);
+    TRAP_END;
+    if (ret == -1) {
+        switch (errno) {
+        case EINTR:
+            goto retry;
+        case ENOMSG:
+        case EWOULDBLOCK:
+#if EAGAIN != EWOULDBLOCK
+        case EAGAIN:
+#endif
+            if (!nowait) {
+                rb_thread_polling ();
+                goto retry;
+            }
+        }
+    }
+    return INT2FIX(ret);
 }
 %}
 
