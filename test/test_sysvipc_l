@@ -82,6 +82,17 @@ class TestSysVIPC < Test::Unit::TestCase
     end
     Process.wait
 
+    # Read from an empty queue.
+
+    msgbuf = Msgbuf.new
+    msgbuf.mtext = ' ' * 100
+    assert_nothing_raised do
+      Timeout::timeout(1) do
+	assert_equal(-1, msgrcv(msgid, msgbuf, 10, 1, IPC_NOWAIT))
+	assert_equal(Errno::ENOMSG::Errno, SysVIPC.errno)
+      end
+    end
+
     # Read a truncated message.
 
     msgbuf = Msgbuf.new

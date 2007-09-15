@@ -305,7 +305,6 @@ inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
         switch (errno) {
         case EINTR:
             goto retry;
-        case ENOMSG:
         case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
         case EAGAIN:

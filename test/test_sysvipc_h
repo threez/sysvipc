@@ -78,6 +78,14 @@ class TestSysVIPC < Test::Unit::TestCase
     end
     Process.wait
 
+    # Read from an empty queue.
+
+    Timeout::timeout(1) do
+      assert_raise(Errno::ENOMSG) do
+	msg.receive(1, 10, IPC_NOWAIT)
+      end
+    end
+
     # Read a truncated message.
 
     assert_not_equal(-1, msg.send(1, 'a few bytes'))
