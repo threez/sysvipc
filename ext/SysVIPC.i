@@ -261,17 +261,16 @@ inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
 {
     int len, slen, nowait = 0, ret;
     struct msgbuf *bufp;
-    VALUE sval;
-
-    sval = StringValue(msgp->mtext);
-    slen = RSTRING_LEN(sval);
+    VALUE s;
 
     len = sizeof (long) + msgsz;
     bufp = (struct msgbuf *) ALLOCA_N(char, len);
 
     bufp->mtype = msgp->mtype;
+    s = rb_check_string_type(msgp->mtext);
+    slen = RSTRING_LEN(s);
     if (slen < msgsz) msgsz = slen;
-    memcpy(bufp->mtext, RSTRING_PTR(msgp->mtext), msgsz);
+    memcpy(bufp->mtext, RSTRING_PTR(s), msgsz);
 
     nowait = msgflg & IPC_NOWAIT;
     if (!rb_thread_alone()) msgflg |= IPC_NOWAIT;
@@ -376,7 +375,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
         switch (cmd) {
         case SETALL:
             array = arg->array;
-            Check_Type(array, T_ARRAY);
+            array = rb_check_array_type(array);
             if (RARRAY(array)->len < len) len = RARRAY(array)->len;
             for (i = 0; i < len; i++) {
                 *(ap++) = NUM2INT(rb_ary_entry(array, i));
@@ -509,9 +508,10 @@ inner_shmread(const struct shmaddr *shmaddr, size_t len, size_t offset)
 static VALUE
 inner_shmwrite(struct shmaddr *shmaddr, VALUE data, size_t offset)
 {
-    rb_check_string_type(data);
-    memcpy((char *) shmaddr + offset, RSTRING(data)->ptr,
-        RSTRING(data)->len);
+    VALUE s;
+
+    s = rb_check_string_type(data);
+    memcpy((char *) shmaddr + offset, RSTRING(s)->ptr, RSTRING(s)->len);
     
     return Qnil;
 }
