@@ -109,9 +109,7 @@ struct Semun {
     VALUE            array;
 };
 
-struct Shmaddr {
-    void           *shmaddr;
-};
+typedef void * shmaddr;
 
 %}
 
@@ -485,44 +483,12 @@ struct shmid_ds {
     time_t          shm_ctime;
 };
 
-struct Shmaddr {
-    void           *shmaddr;
-};
+typedef void *shmaddr;
 
 /* functions */
 
-%rename(shmat) inner_shmat;
-%inline %{
-static VALUE
-inner_shmat(int shmid, const void *ignored, int shmflg)
-{
-    void *ptr;
-    struct Shmaddr *shmaddr;
-    VALUE cShmaddr, ret;
-
-    if ((ptr = shmat(shmid, NULL, shmflg)) == (void *) -1) {
-        ret = INT2FIX(-1);
-    } else {
-        shmaddr = ALLOC(struct Shmaddr);
-        shmaddr->shmaddr = ptr;
-        cShmaddr = ((swig_class *) SWIGTYPE_p_Shmaddr->clientdata)->klass;
-        ret = Data_Wrap_Struct(cShmaddr, NULL, NULL,
-            (struct Shmaddr *) shmaddr);
-    }
-    return ret;
-}
-%}
-
+shmaddr   shmat(int, const shmaddr, int);
 int   shmctl(int, int, struct shmid_ds *);
-
-%rename(shmdt) inner_shmdt;
-%inline %{
-static VALUE
-inner_shmdt(struct Shmaddr *shmaddr)
-{
-    return INT2FIX(shmdt(shmaddr->shmaddr));
-}
-%}
-
+int   shmdt(shmaddr);
 int   shmget(key_t, size_t, int);
 
