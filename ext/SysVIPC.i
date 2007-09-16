@@ -205,6 +205,11 @@ struct msqid_ds {
     time_t          msg_ctime;
 };
 
+/*
+ * Build wrappers for the following instead of struct msgbuf so we
+ * have the message length when we need it.
+ */
+
 struct Msgbuf {
     long int        mtype;
     VALUE          mtext;
@@ -214,6 +219,10 @@ struct Msgbuf {
 
 int       msgctl(int, int, struct msqid_ds *);
 int       msgget(key_t, int);
+
+/*
+ * Shim msgrcv to make it thread-safe and use struct Msgbuf.
+ */
 
 %rename(msgrcv) inner_msgrcv;
 %inline %{
@@ -255,6 +264,10 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
     return LONG2NUM(ret);
 }
 %}
+
+/*
+ * Shim msgsnd to make it thread-safe and use struct Msgbuf.
+ */
 
 %rename(msgsnd) inner_msgsnd;
 %inline %{
@@ -330,6 +343,11 @@ struct sembuf {
     short int          sem_flg;
 };
 
+/*
+ * Build wrappers for the following instead of union semun so we know
+ * the array length.
+ */
+
 struct Semun {
     int              val;
     struct semid_ds *buf;
@@ -337,7 +355,7 @@ struct Semun {
 };
 
 /*
- * Typemap to allow semctl() to take an optional final argument.
+ * Allow semctl() to take an optional final argument.
  */
 
 %typemap(default) struct Semun * {
@@ -346,7 +364,7 @@ struct Semun {
 /* functions */
 
 /*
- * Shim semctl() to build union semun on the fly.
+ * Shim semctl() to use struct Semun.
  */
 
 %rename(semctl) inner_semctl;
@@ -406,8 +424,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
 int   semget(key_t, int, int);
 
 /*
- * Typemap to convert Ruby array into array of struct sembuf
- * for semop().
+ * Convert Ruby array into array of struct sembuf for semop().
  */
 
 %typemap(in) struct sembuf [ANY] {
@@ -486,6 +503,11 @@ struct shmid_ds {
     time_t          shm_ctime;
 };
 
+/*
+ * Build wrappers for the following to be used in read/write
+ * operations. This creates a Ruby class Shmaddr.
+ */
+
 struct shmaddr {
 };
 
@@ -496,6 +518,10 @@ int   shmctl(int, int, struct shmid_ds *);
 int   shmdt(struct shmaddr *);
 int   shmget(key_t, size_t, int);
 
+/*
+ * Define read function for Shmaddr.
+ */
+
 %rename(shmread) inner_shmread;
 %inline %{
 static VALUE
@@ -504,6 +530,10 @@ inner_shmread(const struct shmaddr *shmaddr, size_t len, size_t offset)
     return rb_str_new((char *) shmaddr + offset, len);
 }
 %}
+
+/*
+ * Define write function for Shmaddr.
+ */
 
 %rename(shmwrite) inner_shmwrite;
 %inline %{
@@ -518,4 +548,3 @@ inner_shmwrite(struct shmaddr *shmaddr, VALUE data, size_t offset)
     return Qnil;
 }
 %}
-
