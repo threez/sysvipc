@@ -500,16 +500,20 @@ int   shmget(key_t, size_t, int);
 static VALUE
 inner_shmread(const struct shmaddr *shmaddr, size_t len, size_t offset)
 {
-    return rb_str_new2("test");
+    return rb_str_new((char *) shmaddr + offset, len);
 }
 %}
 
 %rename(shmwrite) inner_shmwrite;
 %inline %{
 static VALUE
-inner_shmwrite(struct shmaddr *shmaddr, char *text, size_t offset)
+inner_shmwrite(struct shmaddr *shmaddr, VALUE data, size_t offset)
 {
-    return INT2FIX(0);
+    rb_check_string_type(data);
+    memcpy((char *) shmaddr + offset, RSTRING(data)->ptr,
+        RSTRING(data)->len);
+    
+    return Qnil;
 }
 %}
 
