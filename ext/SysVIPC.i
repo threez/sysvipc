@@ -153,29 +153,15 @@ typedef unsigned uid_t;
 
 /* constants */
 
-/*
- * Normally, these would be defined with #define, but SWIG interpolates
- * the value of constants when it runs, which results in constants
- * with the literal values as defined on the machine running SWIG. The
- * Single Unix Specification, however, specifies only that these
- * constants exist, not that they have any particular value. The
- * following block inserts code to generate Ruby constants whose value
- * is set at compile time, appropriate for the execution platform.
- */
+%constant int IPC_CREAT = IPC_CREAT;
+%constant int IPC_EXCL = IPC_EXCL;
+%constant int IPC_NOWAIT = IPC_NOWAIT;
 
-%init %{
-#define def_const(name) rb_define_const(mSysVIPC, #name, SWIG_From_int(name))
+%constant int IPC_PRIVATE = IPC_PRIVATE;
 
-  def_const(IPC_CREAT);
-  def_const(IPC_EXCL);
-  def_const(IPC_NOWAIT);
-
-  def_const(IPC_PRIVATE);
-
-  def_const(IPC_RMID);
-  def_const(IPC_SET);
-  def_const(IPC_STAT);
-%}
+%constant int IPC_RMID = IPC_RMID;
+%constant int IPC_SET = IPC_SET;
+%constant int IPC_STAT = IPC_STAT;
 
 /* structs */
 
@@ -202,9 +188,7 @@ typedef unsigned int msglen_t;
 
 /* constants */
 
-%init %{
-    def_const(MSG_NOERROR);
-%}
+%constant int MSG_NOERROR = MSG_NOERROR;
 
 /* structs */
 
@@ -320,17 +304,15 @@ inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
 
 /* constants */
 
-%init %{
-    def_const(SEM_UNDO);
+%constant int SEM_UNDO = SEM_UNDO;
 
-    def_const(GETNCNT);
-    def_const(GETPID);
-    def_const(GETVAL);
-    def_const(GETALL);
-    def_const(GETZCNT);
-    def_const(SETVAL);
-    def_const(SETALL);
-%}
+%constant int GETNCNT = GETNCNT;
+%constant int GETPID = GETPID;
+%constant int GETVAL = GETVAL;
+%constant int GETALL = GETALL;
+%constant int GETZCNT = GETZCNT;
+%constant int SETVAL = SETVAL;
+%constant int SETALL = SETALL;
 
 /* structs */
 
@@ -486,11 +468,9 @@ typedef unsigned shmatt_t;
 
 /* constants */
 
-%init %{
-    def_const(SHM_RDONLY);
-    def_const(SHMLBA);
-    def_const(SHM_RND);
-%}
+%constant int SHM_RDONLY = SHM_RDONLY;
+%constant int SHMLBA = SHMLBA;
+%constant int SHM_RND = SHM_RND;
 
 /* structs */
 
