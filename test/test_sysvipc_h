@@ -65,7 +65,6 @@ class TestSysVIPC < Test::Unit::TestCase
     # Test send/receive with processes.
 
     Process.fork do
-      sleep 1
       NMSGS.times do |i|
 	mtype = i + 1
 	mtext = "message #{i}"
@@ -82,7 +81,6 @@ class TestSysVIPC < Test::Unit::TestCase
     # Test send/receive with threads.
 
     t = Thread.new do
-      sleep 1
       NMSGS.times do |i|
 	mtype = i + 1
 	mtext = "message #{i}"
