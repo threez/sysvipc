@@ -2,8 +2,6 @@ require 'SysVIPC.so'
 
 module SysVIPC
 
-  RELEASE = '0.9.1-rc1'
-
   def check_result(res)
     raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
   end

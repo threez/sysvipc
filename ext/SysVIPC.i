@@ -66,6 +66,8 @@
 
 %module SysVIPC
 
+%constant char RELEASE[] = "0.9.1-rc1";
+
 /*
  * Headers and declarations required by generated C wrapper code.
  */
