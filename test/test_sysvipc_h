@@ -286,6 +286,14 @@ class TestSysVIPC < Test::Unit::TestCase
     segment = nil
     assert_nothing_raised { segment = shm.attach(segment) }
 
+    # Write shared memory segment.
+
+    assert_nothing_raised {segment.write('test', 0) }
+
+    # Read shared memory segment.
+
+    assert_equal('test', segment.read(10, 0))
+
     # Detach shared memory segment.
 
     assert_nothing_raised { shm.detach(segment) }

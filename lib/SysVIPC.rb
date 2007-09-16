@@ -185,5 +185,16 @@ module SysVIPC
 
   end
 
-end
+  class Shmaddr
 
+    def write(text, offset = 0)
+      shmwrite(self, text, offset)
+    end
+
+    def read(len, offset = 0)
+      shmread(self, len, offset)
+    end
+
+  end
+
+end

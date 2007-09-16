@@ -109,7 +109,9 @@ struct Semun {
     VALUE            array;
 };
 
-typedef void * shmaddr;
+struct shmaddr {
+    void *p;
+};
 
 %}
 
@@ -483,12 +485,33 @@ struct shmid_ds {
     time_t          shm_ctime;
 };
 
-typedef void *shmaddr;
+%ignore p;
+struct shmaddr {
+    void *p;
+};
 
 /* functions */
 
-shmaddr   shmat(int, const shmaddr, int);
+struct shmaddr *shmat(int, const struct shmaddr *, int);
 int   shmctl(int, int, struct shmid_ds *);
-int   shmdt(shmaddr);
+int   shmdt(struct shmaddr *);
 int   shmget(key_t, size_t, int);
+
+%rename(shmread) inner_shmread;
+%inline %{
+static VALUE
+inner_shmread(const struct shmaddr *shmaddr, size_t len, size_t offset)
+{
+    return rb_str_new2("test");
+}
+%}
+
+%rename(shmwrite) inner_shmwrite;
+%inline %{
+static VALUE
+inner_shmwrite(struct shmaddr *shmaddr, char *text, size_t offset)
+{
+    return INT2FIX(0);
+}
+%}
 
