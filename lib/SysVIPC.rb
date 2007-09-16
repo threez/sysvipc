@@ -173,6 +173,16 @@ module SysVIPC
     end
     alias :rm :ipc_rmid
 
+    def attach(shmaddr = nil, flags = 0)
+      shmaddr = shmat(@shmid, shmaddr, flags)
+      check_result(shmaddr)
+      shmaddr
+    end
+
+    def detach(shmaddr)
+      check_result(shmdt(shmaddr))
+    end
+
   end
 
 end
