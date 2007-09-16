@@ -485,9 +485,7 @@ struct shmid_ds {
     time_t          shm_ctime;
 };
 
-%ignore p;
 struct shmaddr {
-    void *p;
 };
 
 /* functions */

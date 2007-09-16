@@ -191,6 +191,10 @@ module SysVIPC
       shmwrite(self, text, offset)
     end
 
+    def <<(text)
+      write(text)
+    end
+
     def read(len, offset = 0)
       shmread(self, len, offset)
     end
