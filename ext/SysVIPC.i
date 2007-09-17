@@ -431,7 +431,7 @@ int   semget(key_t, int, int);
   struct sembuf *sp, *t;
   int i, len;
 
-  Check_Type($input, T_ARRAY);
+  $input = rb_check_array_type($input);
   len = RARRAY($input)->len;
   $1 = sp = (struct sembuf *) ALLOCA_N(struct sembuf, len);
   for (i = 0; i < len; i++) {
