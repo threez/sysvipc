@@ -168,10 +168,11 @@ module SysVIPC
 
   class Sembuf
 
+    alias :orig_initialize :initialize
+
     # Create a new Sembuf object for semaphore number +sem_num+,
     # operation +sem_op+, and flags +sem_flg+. See semop(2).
 
-    alias :orig_initialize :initialize
     def initialize(sem_num, sem_op, sem_flg = 0)
       orig_initialize
       self.sem_num = sem_num
