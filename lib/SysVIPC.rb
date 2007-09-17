@@ -1,8 +1,103 @@
 require 'SysVIPC.so'
 
+# Document-class: SysVIPC
+#
+# = SysVIPC
+#
+# Ruby module for System V Inter-Process Communication:
+# message queues, semaphores, and shared memory.
+#
+# Hosted as project sysvipc[http://rubyforge.org/projects/sysvipc/]
+# on RubyForge[http://rubyforge.org/].
+#
+# Copyright (C) 2001, 2006, 2007  Daiki Ueno
+# Copyright (C) 2006, 2007  James Steven Jenkins
+#
+# == Usage Synopsis
+# === Common Code
+#
+# All programs using this module must include
+#
+#     require 'SysVIPC'
+#
+# It may be convenient to add
+#
+#     include SysVIPC
+#
+# All IPC objects are identified by a key. SysVIPC includes a
+# convenience function for mapping file names and integer IDs into a
+# key:
+#
+#     key = ftok('/a/file/that/must/exist', 0)
+#
+# === Message Queues
+#
+# Get (create if necessary) a message queue:
+#
+#     mq = MessageQueue.new(key, IPC_CREAT | 0600)
+#
+# Send a message of type 0:
+#
+#     mq.send(0, 'message')
+#
+# Receive up to 100 bytes from the first message of type 0:
+#
+#     msg = mq.receive(0, 100)
+#
+# === Semaphores
+#
+# Get (create if necessary) a set of 5 semaphores:
+#
+#     sm = Semaphore.new(key, 5, IPC_CREAT | 0600)
+#
+# Initialize semaphores if newly created:
+#
+#     sm.setall(Array.new(5, 1)) if sm.pid(0) == 0
+#
+# Acquire semaphore 2 (waiting if necessary):
+#
+#     sm.op([Sembuf.new(2, -1)])
+#
+# Release semaphore 2:
+#
+#     sm.op([Sembuf.new(2, 1)])
+#
+# === Shared Memory
+#
+# Get (create if necessary) an 8192-byte shared memory region:
+#
+#     sh = SharedMemory(key, 8192, IPC_CREAT | 0660)
+#
+# Attach shared memory:
+#
+#     shmaddr = sh.attach
+#
+# Write data:
+#
+#     shmaddr.write('testing')
+#
+# Read 100 bytes of data:
+#
+#     data = shmaddr.read(100);
+#
+# Detach shared memory:
+#
+#     sh.detach(shmaddr)
+#
+# == Installation
+#
+# 1. <tt>ruby setup.rb config</tt>
+# 2. <tt>ruby setup.rb setup</tt>
+# 3. <tt>ruby setup.rb install</tt> (requires appropriate privilege)
+#
+# == Testing
+#
+# 1. <tt>./test_sysvipc_l</tt> (low-level interface)
+# 2. <tt>./test_sysvipc_h</tt> (high-level interface)
+
 module SysVIPC
 
-  def check_result(res)               # :nodoc:
+  def check_result(res)                                      # :nodoc:
     raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
   end
 
@@ -68,6 +163,21 @@ module SysVIPC
       msgbuf.mtext
     end
     alias :receive :rcv
+
+  end
+
+  class Sembuf
+
+    # Create a new Sembuf object for semaphore number +sem_num+,
+    # operation +sem_op+, and flags +sem_flg+. See semop(2).
+
+    alias :orig_initialize :initialize
+    def initialize(sem_num, sem_op, sem_flg = 0)
+      orig_initialize
+      self.sem_num = sem_num
+      self.sem_op = sem_op
+      self.sem_flg = sem_flg
+    end
 
   end
 

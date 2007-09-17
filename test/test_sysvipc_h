@@ -181,16 +181,10 @@ class TestSysVIPC < Test::Unit::TestCase
     acquire = []
     release = []
     NSEMOPS.times do |i|
-      asb = Sembuf.new
-      asb.sem_num = i
-      asb.sem_op = -1
-      asb.sem_flg = 0
+      asb = Sembuf.new(i, -1)
       acquire << asb
 
-      rsb = Sembuf.new
-      rsb.sem_num = i
-      rsb.sem_op = 1
-      rsb.sem_flg = 0
+      rsb = Sembuf.new(i, 1)
       release << rsb
     end
 
