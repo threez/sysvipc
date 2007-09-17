@@ -2,13 +2,16 @@ require 'SysVIPC.so'
 
 module SysVIPC
 
-  def check_result(res)
+  def check_result(res)               # :nodoc:
     raise SystemCallError.new(SysVIPC.errno), nil, caller if res == -1
   end
 
   class MessageQueue
 
     private
+
+    # Return a MessageQueue object encapsuating a message queue
+    # associated with +key+. See msgget(2).
 
     def initialize(key, flags = 0)
       @msgid = msgget(key, flags)
@@ -17,12 +20,16 @@ module SysVIPC
 
     public
 
+    # Return the Msqid_ds object. See msgctl(2).
+
     def ipc_stat
       msqid_ds = Msqid_ds.new
       check_result(msgctl(@msgid, IPC_STAT, msqid_ds))
       msqid_ds
     end
     alias :msqid_ds :ipc_stat
+
+    # Set the Msqid_ds object. See msgctl(2).
 
     def ipc_set(msqid_ds)
       unless Msqid_ds === msqid_ds
@@ -31,11 +38,16 @@ module SysVIPC
       end
       check_result(msgctl(@msgid, IPC_SET, msqid_ds))
     end
+    alias :msqid_ds= :ipc_set
+
+    # Remove. See msgctl(2).
 
     def ipc_rmid
       check_result(msgctl(@msgid, IPC_RMID, nil))
     end
     alias :rm :ipc_rmid
+
+    # Send a message with type +type+ and text +text+. See msgsnd(2).
 
     def snd(type, text, flags = 0)
       msgbuf = Msgbuf.new
@@ -44,6 +56,9 @@ module SysVIPC
       check_result(msgsnd(@msgid, msgbuf, text.length, flags))
     end
     alias :send :snd
+
+    # Receive a message of type +type+, limited to +len+ bytes or fewer.
+    # See msgsnd(2).
 
     def rcv(type, size, flags = 0)
       msgbuf = Msgbuf.new

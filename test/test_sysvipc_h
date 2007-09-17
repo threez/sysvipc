@@ -52,7 +52,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Set Msqid_ds.
 
-    msg.ipc_set(msqid_ds)
+    msg.msqid_ds = msqid_ds
 
     # Check Msqid_ds again.
 
