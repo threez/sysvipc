@@ -10,7 +10,7 @@ module SysVIPC
 
     private
 
-    def initialize(key, flags)
+    def initialize(key, flags = 0)
       @msgid = msgget(key, flags)
       check_result(@msgid)
     end
@@ -144,12 +144,18 @@ module SysVIPC
     
     private
 
-    def initialize(key, size, flags)
+    # Return a SharedMemory object encapsulating a
+    # shared memory segment of +size+ bytes associated with
+    # +key+. See shmget(2).
+
+    def initialize(key, size, flags = 0)
       @shmid = shmget(key, size, flags)
       check_result(@shmid)
     end
 
     public
+
+    # Return the Shmid_ds object. See shmctl(2).
 
     def ipc_stat
       shmid_ds = Shmid_ds.new
@@ -158,6 +164,8 @@ module SysVIPC
     end
     alias :shmid_ds :ipc_stat
 
+    # Set the Shmid_ds object. See shmctl(2).
+
     def ipc_set(shmid_ds)
       unless Shmid_ds === shmid_ds
 	raise ArgumentError,
@@ -165,17 +173,27 @@ module SysVIPC
       end
       check_result(shmctl(@shmid, IPC_SET, shmid_ds))
     end
+    alias shmid_ds= :ipc_set
+
+    # Remove. See shmctl(2).
 
     def ipc_rmid
       check_result(shmctl(@shmid, IPC_RMID, nil))
     end
     alias :rm :ipc_rmid
 
+    # Attach to a shared memory address object and return it.
+    # See shmat(2). If +shmaddr+ is nil, the shared memory is attached
+    # at the first available address as selected by the system. See
+    # shmat(2).
+
     def attach(shmaddr = nil, flags = 0)
       shmaddr = shmat(@shmid, shmaddr, flags)
       check_result(shmaddr)
       shmaddr
     end
+
+    # Detach the +Shmaddr+ object +shmaddr+. See shmdt(2).
 
     def detach(shmaddr)
       check_result(shmdt(shmaddr))
@@ -185,13 +203,14 @@ module SysVIPC
 
   class Shmaddr
 
+    # Write the string +text+ to offset +offset+.
+
     def write(text, offset = 0)
       shmwrite(self, text, offset)
     end
+    alias :<< :write
 
-    def <<(text)
-      write(text)
-    end
+    # Read +len+ bytes at offset +offset+ and return them in a String.
 
     def read(len, offset = 0)
       shmread(self, len, offset)

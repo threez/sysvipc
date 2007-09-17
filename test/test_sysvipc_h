@@ -270,7 +270,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Set Shmid_ds.
 
-    shm.ipc_set(shmid_ds)
+    shm.shmid_ds = shmid_ds
 
     # Check Shmid_ds again.
 
