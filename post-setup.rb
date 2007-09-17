@@ -48,7 +48,7 @@ rescue
 end
 
 unless File.exist?(NODOC)
-  system "rdoc #{DOC_SOURCE.join(' ')}" if DOC_SOURCE.any? do |s|
+  system "rdoc --force-update #{DOC_SOURCE.join(' ')}" if DOC_SOURCE.any? do |s|
     File.stat(s).mtime > rdoc_time
   end
 end

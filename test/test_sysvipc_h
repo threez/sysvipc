@@ -164,7 +164,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Set Semid_ds.
 
-    sem.ipc_set(semid_ds)
+    sem.semid_ds =semid_ds
 
     # Check Semid_ds again.
 

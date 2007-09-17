@@ -75,6 +75,9 @@ module SysVIPC
 
     private
 
+    # Return a Sempahore object encapsulating a
+    # set of +nsems+ semaphores associated with +key+. See semget(2).
+
     def initialize(key, nsems, flags)
       @nsems = nsems
       @semid = semget(key, nsems, flags)
@@ -82,6 +85,9 @@ module SysVIPC
     end
 
     public
+
+    # Set each value in the semaphore set to the corresponding value
+    # in the Array +values+. See semctl(2).
 
     def setall(values)
       if values.length > @nsems
@@ -93,6 +99,9 @@ module SysVIPC
       check_result(semctl(@semid, 0, SETALL, su))
     end
 
+    # Return an Array containing the value of each semaphore in the
+    # set. See semctl(2).
+
     def getall
       su = Semun.new
       su.array = Array.new(@nsems, 0)
@@ -100,31 +109,46 @@ module SysVIPC
       su.array
     end
 
+    # Set the value of semaphore +semnum+ to +val+. See semctl(2).
+
     def setval(semnum, val)
       su = Semun.new
       su.val = SEMVAL
       check_result(semctl(@semid, semnum, SETVAL, su))
     end
 
+    # Get the value of semaphore +semnum+. See semctl(2).
+
     def getval(semnum)
       semctl(@semid, semnum, GETVAL)
     end
     alias :val :getval
+
+    # Get the process ID of the last semaphore operation. See
+    # semctl(2).
 
     def getpid
       semctl(@semid, 0, GETPID)
     end
     alias :pid :getpid
 
+    # Get the number of processes waiting for a semaphore to become
+    # non-zero. See semctl(2).
+
     def getncnt
       semctl(@semid, 0, GETNCNT)
     end
     alias :ncnt :getncnt
 
+    # Get the number of processes waiting for a semaphore to become
+    # zero. See semctl(2).
+
     def getzcnt
       semctl(@semid, 0, GETZCNT)
     end
     alias :zcnt :getzcnt
+
+    # Return the Semid_ds object. See semctl(2).
 
     def ipc_stat
       su = Semun.new
@@ -133,6 +157,8 @@ module SysVIPC
       su.buf
     end
     alias :semid_ds :ipc_stat
+
+    # Return the Semid_ds object. See semctl(2).
 
     def ipc_set(semid_ds)
       unless Semid_ds === semid_ds
@@ -143,11 +169,17 @@ module SysVIPC
       su.buf = semid_ds
       check_result(semctl(@semid, 0, IPC_SET, su))
     end
+    alias :semid_ds= :ipc_set
+
+    # Remove. See semctl(2).
 
     def ipc_rmid
       check_result(semctl(@semid, 0, IPC_RMID))
     end
     alias :rm :ipc_rmid
+
+    # Perform a set of semaphore operations. The argument +array+ is
+    # an Array of Sembuf objects. See semop(2).
 
     def op(array)
       check_result(semop(@semid, array, array.length))
