@@ -118,8 +118,8 @@ module SysVIPC
     # Return the Msqid_ds object. See msgctl(2).
 
     def ipc_stat
-      msqid_ds = Msqid_ds.new
-      check_result(msgctl(@msgid, IPC_STAT, msqid_ds))
+      res, msqid_ds = msgctl(@msgid, IPC_STAT)
+      check_result(res)
       msqid_ds
     end
     alias :msqid_ds :ipc_stat

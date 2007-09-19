@@ -217,7 +217,33 @@ struct Msgbuf {
 
 /* functions */
 
-int       msgctl(int, int, struct msqid_ds *);
+%typemap(default) struct msqid_ds * { }
+
+/*
+ * Shim msgctl to deal with optional in and out arguments.
+ */
+
+%rename(msgctl) inner_msgctl;
+%inline %{
+static VALUE inner_msgctl(int msqid, int cmd, struct msqid_ds *msqid_ds)
+{
+    VALUE result;
+
+    if (cmd == IPC_STAT) {
+        msqid_ds = ALLOC_N(struct msqid_ds, 1);
+    }
+
+    result = INT2FIX(msgctl(msqid, cmd, msqid_ds));
+
+    if (cmd == IPC_STAT) {
+        result = SWIG_Ruby_AppendOutput(result,
+            SWIG_NewPointerObj(msqid_ds, SWIGTYPE_p_msqid_ds, 1));
+    }
+
+    return result;
+}
+%}
+
 int       msgget(key_t, int);
 
 /*

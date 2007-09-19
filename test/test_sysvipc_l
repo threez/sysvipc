@@ -39,8 +39,8 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Get Msqid_ds
 
-    msqid_ds = Msqid_ds.new
-    assert_not_equal(-1, msgctl(msgid, IPC_STAT, msqid_ds))
+    res, msqid_ds = msgctl(msgid, IPC_STAT)
+    assert_not_equal(-1, res)
     assert_instance_of(Msqid_ds, msqid_ds)
 
     assert_equal(Process.uid, msqid_ds.msg_perm.uid)
@@ -56,7 +56,8 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Check Msqid_ds again.
 
-    assert_not_equal(-1, msgctl(msgid, IPC_STAT, msqid_ds))
+    res, msqid_ds = msgctl(msgid, IPC_STAT)
+    assert_not_equal(-1, res)
 
     assert_equal(Process.uid, msqid_ds.msg_perm.uid)
     assert_equal(Process.gid, msqid_ds.msg_perm.gid)
