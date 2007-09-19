@@ -139,8 +139,9 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Check initialized values.
 
-    semun.array = nil
-    assert_not_equal(-1, semctl(semid, 0, GETALL, semun))
+    res, semun = semctl(semid, 0, GETALL)
+    assert_not_equal(-1, res)
+    assert_kind_of(Semun, semun)
     assert_equal(values, semun.array)
 
     # Set a single semaphore value.

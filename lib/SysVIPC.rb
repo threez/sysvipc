@@ -209,9 +209,8 @@ module SysVIPC
     # set. See semctl(2).
 
     def getall
-      su = Semun.new
-      su.array = Array.new(@nsems, 0)
-      check_result(semctl(@semid, 0, GETALL, su))
+      res, su = semctl(@semid, 0, GETALL)
+      check_result(res)
       su.array
     end
 
