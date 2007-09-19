@@ -277,8 +277,8 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Get Shmid_ds
 
-    shmid_ds = Shmid_ds.new
-    assert_not_equal(-1, shmctl(shmid, IPC_STAT, shmid_ds))
+    res, shmid_ds = shmctl(shmid, IPC_STAT)
+    assert_not_equal(-1, res)
     assert_instance_of(Shmid_ds, shmid_ds)
 
     assert_equal(Process.uid, shmid_ds.shm_perm.uid)
@@ -291,7 +291,8 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Check Shmid_ds again.
 
-    assert_not_equal(-1, shmctl(shmid, IPC_STAT, shmid_ds))
+    res, shmid_ds = shmctl(shmid, IPC_STAT)
+    assert_not_equal(-1, res)
 
     assert_equal(Process.uid, shmid_ds.shm_perm.uid)
     assert_equal(Process.gid, shmid_ds.shm_perm.gid)

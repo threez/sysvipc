@@ -310,8 +310,8 @@ module SysVIPC
     # Return the Shmid_ds object. See shmctl(2).
 
     def ipc_stat
-      shmid_ds = Shmid_ds.new
-      check_result(shmctl(@shmid, IPC_STAT, shmid_ds))
+      res, shmid_ds = shmctl(@shmid, IPC_STAT)
+      check_result(res)
       shmid_ds
     end
     alias :shmid_ds :ipc_stat

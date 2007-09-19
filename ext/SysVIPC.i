@@ -534,7 +534,34 @@ struct shmaddr {
 /* functions */
 
 struct shmaddr *shmat(int, const struct shmaddr *, int);
-int   shmctl(int, int, struct shmid_ds *);
+
+%typemap(default) struct shmid_ds * { }
+
+/*
+ * Shim shmctl to deal with optional in and out arguments.
+ */
+
+%rename(shmctl) inner_shmctl;
+%inline %{
+static VALUE inner_shmctl(int shmid, int cmd, struct shmid_ds *shmid_ds)
+{
+    VALUE result;
+
+    if (cmd == IPC_STAT) {
+        shmid_ds = ALLOC_N(struct shmid_ds, 1);
+    }
+
+    result = INT2FIX(shmctl(shmid, cmd, shmid_ds));
+
+    if (cmd == IPC_STAT) {
+        result = SWIG_Ruby_AppendOutput(result,
+            SWIG_NewPointerObj(shmid_ds, SWIGTYPE_p_shmid_ds, 1));
+    }
+
+    return result;
+}
+%}
+
 int   shmdt(struct shmaddr *);
 int   shmget(key_t, size_t, int);
 
