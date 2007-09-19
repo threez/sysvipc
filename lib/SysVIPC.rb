@@ -256,14 +256,13 @@ module SysVIPC
     # Return the Semid_ds object. See semctl(2).
 
     def ipc_stat
-      su = Semun.new
-      su.buf = Semid_ds.new
-      check_result(semctl(@semid, 0, IPC_STAT, su))
+      res, su = semctl(@semid, 0, IPC_STAT)
+      check_result(res)
       su.buf
     end
     alias :semid_ds :ipc_stat
 
-    # Return the Semid_ds object. See semctl(2).
+    # Set the Semid_ds object. See semctl(2).
 
     def ipc_set(semid_ds)
       unless Semid_ds === semid_ds

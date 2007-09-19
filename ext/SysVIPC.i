@@ -398,7 +398,6 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
         us.val = arg->val;
         break;
     case GETALL:
-        arg = ALLOC_N(struct Semun, 1);
     case SETALL:
 
         /* allocate us.array */
@@ -421,6 +420,8 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
         }
         break;
     case IPC_STAT:
+        us.buf = ALLOC_N(struct semid_ds, 1);
+        break;
     case IPC_SET:
         us.buf = arg->buf;
         break;
@@ -429,9 +430,18 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
     result = INT2FIX(ret);
     switch (cmd) {
     case GETALL:
-        arg->array = rb_ary_new2(len);
-        for (i = 0, ap = us.array; i < len; i++) {
-            rb_ary_store(arg->array, i, INT2NUM(*ap++));
+    case IPC_STAT:
+        arg = ALLOC_N(struct Semun, 1);
+        switch (cmd) {
+        case GETALL:
+            arg->array = rb_ary_new2(len);
+            for (i = 0, ap = us.array; i < len; i++) {
+                rb_ary_store(arg->array, i, INT2NUM(*ap++));
+            }
+            break;
+        case IPC_STAT:
+            arg->buf = us.buf;
+            break;
         }
         result = SWIG_Ruby_AppendOutput(result,
             SWIG_NewPointerObj(arg, SWIGTYPE_p_Semun, 1));

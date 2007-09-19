@@ -164,8 +164,9 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Get Semid_ds.
 
-    semun.buf = Semid_ds.new
-    assert_not_equal(-1, semctl(semid, 0, IPC_STAT, semun))
+    res, semun = semctl(semid, 0, IPC_STAT)
+    assert_not_equal(-1, res)
+    assert_instance_of(Semun, semun)
     assert_instance_of(Semid_ds, semun.buf)
 
     assert_equal(NSEMS, semun.buf.sem_nsems)
@@ -180,7 +181,8 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Check Semid_ds again.
 
-    assert_not_equal(-1, semctl(semid, 0, IPC_STAT, semun))
+    res, semun = semctl(semid, 0, IPC_STAT)
+    assert_not_equal(-1, res)
 
     assert_equal(NSEMS, semun.buf.sem_nsems)
 
