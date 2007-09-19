@@ -92,11 +92,6 @@ struct msgbuf {
 };
 #endif
 
-struct Msgbuf {
-    long int        mtype;
-    VALUE          mtext;
-};
-
 #ifndef HAVE_TYPE_UNION_SEMUN
 union semun {
     int              val;
@@ -205,16 +200,6 @@ struct msqid_ds {
     time_t          msg_ctime;
 };
 
-/*
- * Build wrappers for the following instead of struct msgbuf so we
- * have the message length when we need it.
- */
-
-struct Msgbuf {
-    long int        mtype;
-    VALUE          mtext;
-};
-
 /* functions */
 
 %typemap(default) struct msqid_ds * { }
@@ -247,17 +232,18 @@ static VALUE inner_msgctl(int msqid, int cmd, struct msqid_ds *msqid_ds)
 int       msgget(key_t, int);
 
 /*
- * Shim msgrcv to make it thread-safe and use struct Msgbuf.
+ * Shim msgrcv to make it thread-safe and change call/return
+ * convention.
  */
 
 %rename(msgrcv) inner_msgrcv;
 %inline %{
 static VALUE
-inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
-    long msgtyp, int msgflg)
+inner_msgrcv(int msqid, size_t msgsz, long msgtyp, int msgflg)
 {
     int len, nowait = 0, ret;
     struct msgbuf *bufp;
+    VALUE result;
 
     len = sizeof (long) + msgsz;
     bufp = (struct msgbuf *) ALLOCA_N(char, len);
@@ -268,6 +254,7 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
     retry:
     TRAP_BEG;
     ret = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg);
+    result = LONG2NUM(ret);
     TRAP_END;
     if (ret == -1) {
         switch (errno) {
@@ -283,34 +270,37 @@ inner_msgrcv(int msqid, struct Msgbuf *msgp, size_t msgsz,
                 goto retry;
             }
         }
+        result = SWIG_Ruby_AppendOutput(result, Qnil);
+        result = SWIG_Ruby_AppendOutput(result, Qnil);
     } else {
-        msgp->mtype = bufp->mtype;
-        msgp->mtext = rb_str_new(bufp->mtext, ret);
+        result = SWIG_Ruby_AppendOutput(result, INT2FIX(bufp->mtype));
+        result = SWIG_Ruby_AppendOutput(result, rb_str_new(bufp->mtext, ret));
     }
-    return LONG2NUM(ret);
+    return result;
 }
 %}
 
 /*
- * Shim msgsnd to make it thread-safe and use struct Msgbuf.
+ * Shim msgsnd to make it thread-safe and change call/return
+ * convention.
  */
 
 %rename(msgsnd) inner_msgsnd;
 %inline %{
 static VALUE
-inner_msgsnd(int msqid, const struct Msgbuf *msgp, size_t msgsz, int msgflg)
+inner_msgsnd(int msqid, long int mtype, VALUE mtext, int msgflg)
 {
-    int len, slen, nowait = 0, ret;
+    int len, msgsz, nowait = 0, ret;
     struct msgbuf *bufp;
     VALUE s;
+
+    s = rb_check_string_type(mtext);
+    msgsz = RSTRING_LEN(s);
 
     len = sizeof (long) + msgsz;
     bufp = (struct msgbuf *) ALLOCA_N(char, len);
 
-    bufp->mtype = msgp->mtype;
-    s = rb_check_string_type(msgp->mtext);
-    slen = RSTRING_LEN(s);
-    if (slen < msgsz) msgsz = slen;
+    bufp->mtype = mtype;
     memcpy(bufp->mtext, RSTRING_PTR(s), msgsz);
 
     nowait = msgflg & IPC_NOWAIT;

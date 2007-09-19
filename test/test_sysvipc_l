@@ -65,21 +65,16 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Test send/receive with processes.
 
-    sndbuf = Msgbuf.new
     Process.fork do
       NMSGS.times do |i|
-	sndbuf.mtype = i + 1
-	sndbuf.mtext = "message #{i}"
-	len = sndbuf.mtext.length
-	assert_not_equal(-1, msgsnd(msgid, sndbuf, len, 0))
+	assert_not_equal(-1, msgsnd(msgid, i + 1, "message #{i}", 0))
       end
     end
-    rcvbuf = Msgbuf.new
     NMSGS.times do |i|
-      rcvbuf.mtext = ' ' * 100
-      len = rcvbuf.mtext.length
-      assert_not_equal(-1, msgrcv(msgid, rcvbuf, len, i + 1, 0))
-      assert_equal("message #{i}", rcvbuf.mtext)
+      res, mtype, mtext = msgrcv(msgid, 100, i + 1, 0)
+      assert_not_equal(-1, res)
+      assert_equal(i + 1, mtype)
+      assert_equal("message #{i}", mtext)
     end
     Process.wait
 
@@ -87,40 +82,37 @@ class TestSysVIPC < Test::Unit::TestCase
 
     t = Thread.new do
       NMSGS.times do |i|
-	sndbuf.mtype = i + 1
-	sndbuf.mtext = "message #{i}"
-	len = sndbuf.mtext.length
-	assert_not_equal(-1, msgsnd(msgid, sndbuf, len, 0))
+	assert_not_equal(-1, msgsnd(msgid, i + 1, "message #{i}", 0))
       end
     end
     NMSGS.times do |i|
-      rcvbuf.mtext = ' ' * 100
-      len = rcvbuf.mtext.length
-      assert_not_equal(-1, msgrcv(msgid, rcvbuf, len, i + 1, 0))
-      assert_equal("message #{i}", rcvbuf.mtext)
+      res, mtype, mtext = msgrcv(msgid, 100, i + 1, 0)
+      assert_not_equal(-1, res)
+      assert_equal(i + 1, mtype)
+      assert_equal("message #{i}", mtext)
     end
     t.join
 
     # Read from an empty queue.
 
-    rcvbuf.mtext = ' ' * 100
     assert_nothing_raised do
       Timeout::timeout(1) do
-	assert_equal(-1, msgrcv(msgid, rcvbuf, 10, 1, IPC_NOWAIT))
+	res, mtype, mtext = msgrcv(msgid, 10, 1, IPC_NOWAIT)
+	assert_equal(-1, res)
 	assert_equal(Errno::ENOMSG::Errno, SysVIPC.errno)
       end
     end
 
     # Read a truncated message.
 
-    rcvbuf.mtype = 1
-    rcvbuf.mtext = 'a few bytes'
-    len = rcvbuf.mtext.length
-    assert_not_equal(-1, msgsnd(msgid, rcvbuf, len, 0))
-    assert_equal(-1, msgrcv(msgid, rcvbuf, 1, 1, 0))
+    assert_not_equal(-1, msgsnd(msgid, 1, 'a few bytes', 0))
+    res, mtype, mtext = msgrcv(msgid, 1, 1, 0)
+    assert_equal(-1, res)
     assert_equal(Errno::E2BIG::Errno, SysVIPC.errno)
-    assert_not_equal(-1, msgrcv(msgid, rcvbuf, 1, 1, MSG_NOERROR))
-    assert_equal('a', rcvbuf.mtext)
+    res, mtype, mtext = msgrcv(msgid, 1, 1, MSG_NOERROR)
+    assert_not_equal(-1, res)
+    assert_equal(1, mtype)
+    assert_equal('a', mtext)
 
     # Remove message queue.
 

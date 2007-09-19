@@ -145,10 +145,7 @@ module SysVIPC
     # Send a message with type +type+ and text +text+. See msgsnd(2).
 
     def snd(type, text, flags = 0)
-      msgbuf = Msgbuf.new
-      msgbuf.mtype = type
-      msgbuf.mtext = text
-      check_result(msgsnd(@msgid, msgbuf, text.length, flags))
+      check_result(msgsnd(@msgid, type, text, flags))
     end
     alias :send :snd
 
@@ -156,11 +153,9 @@ module SysVIPC
     # See msgsnd(2).
 
     def rcv(type, size, flags = 0)
-      msgbuf = Msgbuf.new
-      msgbuf.mtype = type
-      msgbuf.mtext = ' ' * size
-      check_result(msgrcv(@msgid, msgbuf, size, type, flags))
-      msgbuf.mtext
+      res, mtype, mtext = msgrcv(@msgid, size, type, flags)
+      check_result(res)
+      mtext
     end
     alias :receive :rcv
 
