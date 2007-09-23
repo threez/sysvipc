@@ -100,12 +100,6 @@ union semun {
 };
 #endif
 
-struct Semun {
-    int              val;
-    struct semid_ds *buf;
-    VALUE            array;
-};
-
 struct shmaddr {
     void *p;
 };
@@ -360,42 +354,30 @@ struct sembuf {
 };
 
 /*
- * Build wrappers for the following instead of union semun so we know
- * the array length.
- */
-
-struct Semun {
-    int              val;
-    struct semid_ds *buf;
-    VALUE  array;
-};
-
-/*
  * Allow semctl() to take an optional final argument.
  */
 
-%typemap(default) struct Semun * {
-}
+%typemap(default) VALUE { }
 
 /* functions */
 
 /*
- * Shim semctl() to use struct Semun.
+ * Shim semctl().
  */
 
 %rename(semctl) inner_semctl;
 %inline %{
-static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
+static VALUE inner_semctl(int semid, int semnum, int cmd, VALUE arg)
 {
     int i, len, nsems, ret;
     unsigned short *ap;
     union semun us, tus;
-    VALUE array, result;
-    struct semid_ds semid_ds;
+    VALUE value, result;
+    struct semid_ds semid_ds, *semid_ds_p;
 
     switch (cmd) {
     case SETVAL:
-        us.val = arg->val;
+        us.val = NUM2INT(arg);
         break;
     case GETALL:
     case SETALL:
@@ -410,11 +392,10 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
 
         switch (cmd) {
         case SETALL:
-            array = arg->array;
-            array = rb_check_array_type(array);
-            if (RARRAY(array)->len < len) len = RARRAY(array)->len;
+            arg = rb_check_array_type(arg);
+            if (RARRAY(arg)->len < len) len = RARRAY(arg)->len;
             for (i = 0; i < len; i++) {
-                *(ap++) = NUM2INT(rb_ary_entry(array, i));
+                *(ap++) = NUM2INT(rb_ary_entry(arg, i));
             }
             break;
         }
@@ -423,7 +404,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
         us.buf = ALLOC_N(struct semid_ds, 1);
         break;
     case IPC_SET:
-        us.buf = arg->buf;
+        SWIG_ConvertPtr(arg, &us.buf, SWIGTYPE_p_semid_ds, 0);
         break;
     }
     ret = semctl(semid, semnum, cmd, us);
@@ -431,20 +412,20 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, struct Semun *arg)
     switch (cmd) {
     case GETALL:
     case IPC_STAT:
-        arg = ALLOC_N(struct Semun, 1);
+        semid_ds_p = ALLOC_N(struct semid_ds, 1);
+        value = SWIG_NewPointerObj(semid_ds_p, SWIGTYPE_p_semid_ds, 1);
         switch (cmd) {
         case GETALL:
-            arg->array = rb_ary_new2(len);
+            value = rb_ary_new2(len);
             for (i = 0, ap = us.array; i < len; i++) {
-                rb_ary_store(arg->array, i, INT2NUM(*ap++));
+                rb_ary_store(value, i, INT2NUM(*ap++));
             }
             break;
         case IPC_STAT:
             arg->buf = us.buf;
             break;
         }
-        result = SWIG_Ruby_AppendOutput(result,
-            SWIG_NewPointerObj(arg, SWIGTYPE_p_Semun, 1));
+        result = SWIG_Ruby_AppendOutput(result, value);
         break;
     }
     return result;

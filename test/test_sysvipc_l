@@ -131,23 +131,17 @@ class TestSysVIPC < Test::Unit::TestCase
 
     values = []
     1.upto(NSEMS) { |i| values << 2 * i + 1}
-    semun = Semun.new
-    semun.array = values
-    assert_equal(values, semun.array)
-    assert_not_equal(-1, semctl(semid, 0, SETALL, semun))
-    assert_equal(values, semun.array)
+    assert_not_equal(-1, semctl(semid, 0, SETALL, values))
 
     # Check initialized values.
 
-    res, semun = semctl(semid, 0, GETALL)
+    res, array = semctl(semid, 0, GETALL)
     assert_not_equal(-1, res)
-    assert_kind_of(Semun, semun)
-    assert_equal(values, semun.array)
+    assert_equal(values, array)
 
     # Set a single semaphore value.
 
-    semun.val = SEMVAL
-    assert_not_equal(-1, semctl(semid, 0, SETVAL, semun))
+    assert_not_equal(-1, semctl(semid, 0, SETVAL, SEMVAL))
 
     # Get single semaphore value.
     
@@ -164,31 +158,29 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Get Semid_ds.
 
-    res, semun = semctl(semid, 0, IPC_STAT)
+    res, semid_ds = semctl(semid, 0, IPC_STAT)
     assert_not_equal(-1, res)
-    assert_instance_of(Semun, semun)
-    assert_instance_of(Semid_ds, semun.buf)
+    assert_instance_of(Semid_ds, semid_ds)
 
-    assert_equal(NSEMS, semun.buf.sem_nsems)
+    assert_equal(NSEMS, semid_ds.sem_nsems)
 
-    assert_equal(Process.uid, semun.buf.sem_perm.uid)
-    assert_equal(Process.gid, semun.buf.sem_perm.gid)
-    assert_equal(MODE, semun.buf.sem_perm.mode)
+    assert_equal(Process.uid, semid_ds.sem_perm.uid)
+    assert_equal(Process.gid, semid_ds.sem_perm.gid)
+    assert_equal(MODE, semid_ds.sem_perm.mode)
 
     # Set Semid_ds.
 
-    assert_not_equal(-1, semctl(semid, 0, IPC_SET, semun))
+    assert_not_equal(-1, semctl(semid, 0, IPC_SET, semid_ds))
 
     # Check Semid_ds again.
 
-    res, semun = semctl(semid, 0, IPC_STAT)
+    res, semid_ds = semctl(semid, 0, IPC_STAT)
     assert_not_equal(-1, res)
 
-    assert_equal(NSEMS, semun.buf.sem_nsems)
+    assert_equal(NSEMS, semid_ds.sem_nsems)
 
-    assert_equal(Process.uid, semun.buf.sem_perm.uid)
-    assert_equal(Process.gid, semun.buf.sem_perm.gid)
-    assert_equal(MODE, semun.buf.sem_perm.mode)
+    assert_equal(Process.uid, semid_ds.sem_perm.uid)
+    assert_equal(Process.gid, semid_ds.sem_perm.gid)
 
     # Build acquire/release operation arrays.
 
@@ -210,8 +202,7 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Initialize semaphores for acquire/release test.
 
-    semun.array = Array.new(NSEMS, 1)
-    assert_not_equal(-1, semctl(semid, 0, SETALL, semun))
+    assert_not_equal(-1, semctl(semid, 0, SETALL, Array.new(NSEMS, 1)))
 
     # Test acquire/release with processes.
 
