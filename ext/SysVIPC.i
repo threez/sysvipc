@@ -404,7 +404,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, VALUE arg)
         us.buf = ALLOC_N(struct semid_ds, 1);
         break;
     case IPC_SET:
-        SWIG_ConvertPtr(arg, &us.buf, SWIGTYPE_p_semid_ds, 0);
+        SWIG_ConvertPtr(arg, (void *) &us.buf, SWIGTYPE_p_semid_ds, 0);
         break;
     }
     ret = semctl(semid, semnum, cmd, us);
@@ -422,7 +422,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, VALUE arg)
             }
             break;
         case IPC_STAT:
-            arg->buf = us.buf;
+            value = SWIG_NewPointerObj(us.buf, SWIGTYPE_p_semid_ds, 1);
             break;
         }
         result = SWIG_Ruby_AppendOutput(result, value);

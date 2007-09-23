@@ -200,26 +200,22 @@ module SysVIPC
 	raise ArgumentError,
 	  "too many values(#{values.length} for semaphore set (#{@nsems})"
       end
-      su = Semun.new
-      su.array = values
-      check_result(semctl(@semid, 0, SETALL, su))
+      check_result(semctl(@semid, 0, SETALL, values))
     end
 
     # Return an Array containing the value of each semaphore in the
     # set. See semctl(2).
 
     def getall
-      res, su = semctl(@semid, 0, GETALL)
+      res, array = semctl(@semid, 0, GETALL)
       check_result(res)
-      su.array
+      array
     end
 
     # Set the value of semaphore +semnum+ to +val+. See semctl(2).
 
     def setval(semnum, val)
-      su = Semun.new
-      su.val = SEMVAL
-      check_result(semctl(@semid, semnum, SETVAL, su))
+      check_result(semctl(@semid, semnum, SETVAL, val))
     end
 
     # Get the value of semaphore +semnum+. See semctl(2).
@@ -256,9 +252,9 @@ module SysVIPC
     # Return the Semid_ds object. See semctl(2).
 
     def ipc_stat
-      res, su = semctl(@semid, 0, IPC_STAT)
+      res, semid_ds = semctl(@semid, 0, IPC_STAT)
       check_result(res)
-      su.buf
+      semid_ds
     end
     alias :semid_ds :ipc_stat
 
@@ -269,9 +265,7 @@ module SysVIPC
 	raise ArgumentError,
 	  "argument to ipc_set must be a Semid_ds"
       end
-      su = Semun.new
-      su.buf = semid_ds
-      check_result(semctl(@semid, 0, IPC_SET, su))
+      check_result(semctl(@semid, 0, IPC_SET, semid_ds))
     end
     alias :semid_ds= :ipc_set
 
