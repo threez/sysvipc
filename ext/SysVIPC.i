@@ -581,7 +581,7 @@ inner_shmwrite(struct shmaddr *shmaddr, VALUE data, size_t offset)
     VALUE s;
 
     s = rb_check_string_type(data);
-    memcpy((char *) shmaddr + offset, RSTRING(s)->ptr, RSTRING(s)->len);
+    memcpy((char *) shmaddr + offset, RSTRING_PTR(s), RSTRING_LEN(s));
     
     return Qnil;
 }
