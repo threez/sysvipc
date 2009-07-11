@@ -3,7 +3,7 @@ $:.unshift('lib')
 
 require 'fileutils'
 require 'rubygems'
-require 'parsedate'
+require 'time'
 require 'SysVIPC'
 
 GEM = 'SysVIPC'
@@ -44,7 +44,7 @@ FileUtils.rm_rf(pv)
 # Create HTML documentation if out of date.
 
 begin
-  rdoc_time = Time.local(*ParseDate.parsedate(File.open(DOC_TIME_FILE).read))
+  rdoc_time = Time.parse(File.open(DOC_TIME_FILE).read)
 rescue
   rdoc_time = Time.local(1970)
 end
