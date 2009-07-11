@@ -393,7 +393,7 @@ static VALUE inner_semctl(int semid, int semnum, int cmd, VALUE arg)
         switch (cmd) {
         case SETALL:
             arg = rb_check_array_type(arg);
-            if (RARRAY(arg)->len < len) len = RARRAY(arg)->len;
+            if (RARRAY_LEN(arg) < len) len = RARRAY_LEN(arg);
             for (i = 0; i < len; i++) {
                 *(ap++) = NUM2INT(rb_ary_entry(arg, i));
             }
@@ -443,7 +443,7 @@ int   semget(key_t, int, int);
   int i, len;
 
   $input = rb_check_array_type($input);
-  len = RARRAY($input)->len;
+  len = RARRAY_LEN($input);
   $1 = sp = (struct sembuf *) ALLOCA_N(struct sembuf, len);
   for (i = 0; i < len; i++) {
     Data_Get_Struct(rb_ary_entry($input, i), struct sembuf, t);
