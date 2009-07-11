@@ -3,3 +3,4 @@
 .config
 .nodoc
 doc
+*.gem

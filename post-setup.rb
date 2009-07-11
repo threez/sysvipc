@@ -2,9 +2,11 @@ $:.unshift('ext')
 $:.unshift('lib')
 
 require 'fileutils'
+require 'rubygems'
 require 'parsedate'
 require 'SysVIPC'
 
+GEM = 'SysVIPC'
 PACKAGE = 'ruby-sysvipc'
 DOC_SOURCE = %w{ext/SysVIPC.c lib/SysVIPC.rb}
 DOC_TIME_FILE = 'doc/created.rid'
@@ -52,3 +54,23 @@ unless File.exist?(NODOC)
     File.stat(s).mtime > rdoc_time
   end
 end
+
+# Build Gem.
+
+spec = Gem::Specification.new do |s|
+  s.name = GEM
+  s.version = SysVIPC::RELEASE.sub(/-rc\d+\z/,'')
+  s.summary = "Builders for MarkUp."
+  s.description = %{System V Inter-Process Communication: message queues, semaphores, and shared memory.}
+  s.extensions << './ext/extconf.rb'
+  s.files = Dir['lib/**/*.rb'] + Dir['ext/**/*.c'] + Dir['test/**/*.rb']
+  s.require_path = 'lib'
+  s.has_rdoc = true
+  s.rdoc_options << '--title' <<  GEM
+  s.homepage = 'http://rubyforge.org/projects/sysvipc/'
+  s.rubyforge_project = 'sysvipc'
+  s.author = 'Steven Jenkins'
+  s.email = 'sjenkins@rubyforge.org'
+end
+
+Gem::Builder.new(spec).build
