@@ -73,8 +73,6 @@
  */
 
 %{
-#include <rubysig.h>
-
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -246,10 +244,8 @@ inner_msgrcv(int msqid, size_t msgsz, long msgtyp, int msgflg)
     if (!rb_thread_alone()) msgflg |= IPC_NOWAIT;
 
     retry:
-    TRAP_BEG;
     ret = msgrcv(msqid, bufp, msgsz, msgtyp, msgflg);
     result = LONG2NUM(ret);
-    TRAP_END;
     if (ret == -1) {
         switch (errno) {
         case EINTR:
@@ -301,9 +297,7 @@ inner_msgsnd(int msqid, long int mtype, VALUE mtext, int msgflg)
     if (!rb_thread_alone()) msgflg |= IPC_NOWAIT;
 
     retry:
-    TRAP_BEG;
     ret = msgsnd(msqid, bufp, msgsz, msgflg);
-    TRAP_END;
     if (ret == -1) {
         switch (errno) {
         case EINTR:
@@ -466,9 +460,7 @@ static VALUE inner_semop(int semid, struct sembuf sops[], size_t nsops)
       if (!rb_thread_alone()) sops[i].sem_flg |= IPC_NOWAIT;
     }
     retry:
-    TRAP_BEG;
     ret = INT2FIX(semop(semid, sops, nsops));
-    TRAP_END;
     if (ret == -1) {
       switch (errno) {
         case EINTR:
