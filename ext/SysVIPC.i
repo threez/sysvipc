@@ -359,7 +359,7 @@ struct sembuf {
 %inline %{
 static VALUE inner_semctl(int semid, int semnum, int cmd, VALUE arg)
 {
-    int i, len, nsems, ret;
+    int i, len, ret;
     unsigned short *ap;
     union semun us, tus;
     VALUE value, result;
