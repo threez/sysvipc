@@ -83,20 +83,16 @@
 #define EWOULDBLOCK EAGAIN
 #endif
 
-#ifndef HAVE_TYPE_STRUCT_MSGBUF
 struct msgbuf {
     long mtype;
     char mtext[1];
 };
-#endif
 
-#ifndef HAVE_TYPE_UNION_SEMUN
 union semun {
     int              val;
     struct semid_ds *buf;
     unsigned short  *array;
 };
-#endif
 
 struct shmaddr {
     void *p;
