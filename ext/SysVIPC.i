@@ -7,7 +7,7 @@
  * $Date$
  *
  * Copyright (C) 2001, 2006, 2007  Daiki Ueno
- * Copyright (C) 2006, 2007  James Steven Jenkins
+ * Copyright (C) 2006, 2007, 2009  James Steven Jenkins
  * 
  * SysVIPC is copyrighted free software by Daiki Ueno, Steven Jenkins,
  * and others.  You can redistribute it and/or modify it under either

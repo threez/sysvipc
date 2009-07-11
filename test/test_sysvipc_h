@@ -5,7 +5,7 @@
 #    $Revision$
 #    $Date$
 #
-#    Copyright (c) 2006 James Steven Jenkins.
+#    Copyright (c) 2006, 2009 James Steven Jenkins.
 #
 
 $:.unshift File.join(File.dirname(__FILE__), '../ext')

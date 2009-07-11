@@ -11,7 +11,7 @@ require 'SysVIPC.so'
 # on RubyForge[http://rubyforge.org/].
 #
 # Copyright (C) 2001, 2006, 2007  Daiki Ueno
-# Copyright (C) 2006, 2007  James Steven Jenkins
+# Copyright (C) 2006, 2007, 2009  James Steven Jenkins
 #
 # == Usage Synopsis
 # === Common Code
