@@ -103,6 +103,8 @@ module SysVIPC
 
   class MessageQueue
 
+    include SysVIPC
+
     private
 
     # Return a MessageQueue object encapsuating a message queue
@@ -163,6 +165,8 @@ module SysVIPC
 
   class Sembuf
 
+    include SysVIPC
+
     alias :orig_initialize :initialize
 
     # Create a new Sembuf object for semaphore number +sem_num+,
@@ -178,6 +182,8 @@ module SysVIPC
   end
 
   class Semaphore
+
+    include SysVIPC
 
     private
 
@@ -287,6 +293,8 @@ module SysVIPC
 
   class SharedMemory
     
+    include SysVIPC
+
     private
 
     # Return a SharedMemory object encapsulating a
@@ -347,6 +355,8 @@ module SysVIPC
   end
 
   class Shmaddr
+
+    include SysVIPC
 
     # Write the string +text+ to offset +offset+.
 

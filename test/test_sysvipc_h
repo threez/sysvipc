@@ -14,10 +14,6 @@ $:.unshift File.join(File.dirname(__FILE__), '../lib')
 require 'test/unit'
 require 'timeout'
 
-require 'SysVIPC'
-
-include SysVIPC
-
 MODE = 0660
 NSEMS = 16
 NSEMOPS = 5
@@ -27,6 +23,10 @@ SHMSIZE = 1024
 SHMTEXT = 'this is a test'
 
 class TestSysVIPC < Test::Unit::TestCase
+
+  require 'SysVIPC'
+
+  include SysVIPC
 
   def setup
   end
