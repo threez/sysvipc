@@ -234,24 +234,24 @@ module SysVIPC
     # Get the process ID of the last semaphore operation. See
     # semctl(2).
 
-    def getpid
-      semctl(@semid, 0, GETPID)
+    def getpid(semnum)
+      semctl(@semid, semnum, GETPID)
     end
     alias :pid :getpid
 
     # Get the number of processes waiting for a semaphore to become
     # non-zero. See semctl(2).
 
-    def getncnt
-      semctl(@semid, 0, GETNCNT)
+    def getncnt(semnum)
+      semctl(@semid, semnum, GETNCNT)
     end
     alias :ncnt :getncnt
 
     # Get the number of processes waiting for a semaphore to become
     # zero. See semctl(2).
 
-    def getzcnt
-      semctl(@semid, 0, GETZCNT)
+    def getzcnt(semnum)
+      semctl(@semid, semnum, GETZCNT)
     end
     alias :zcnt :getzcnt
 

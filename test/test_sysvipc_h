@@ -143,13 +143,13 @@ class TestSysVIPC < Test::Unit::TestCase
 
     # Check PID.
 
-    assert_equal(Process.pid, sem.getpid)
-    assert_equal(Process.pid, sem.pid)
+    assert_equal(Process.pid, sem.getpid(0))
+    assert_equal(Process.pid, sem.pid(0))
 
     # Get wait counts.
 
-    assert_equal(0, sem.ncnt)
-    assert_equal(0, sem.zcnt)
+    assert_equal(0, sem.ncnt(0))
+    assert_equal(0, sem.zcnt(0))
 
     # Get Semid_ds.
 
