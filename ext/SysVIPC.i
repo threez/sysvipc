@@ -88,11 +88,13 @@ struct msgbuf {
     char mtext[1];
 };
 
+#ifndef __APPLE__
 union semun {
     int              val;
     struct semid_ds *buf;
     unsigned short  *array;
 };
+#endif
 
 struct shmaddr {
     void *p;
